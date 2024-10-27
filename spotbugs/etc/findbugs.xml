@@ -710,6 +710,8 @@
                     disabled="false" hidden="false"/>
           <Detector class="edu.umd.cs.findbugs.detect.FindImproperSynchronization" speed="fast"
                     reports="USO_UNSAFE_METHOD_SYNCHRONIZATION,USO_UNSAFE_STATIC_METHOD_SYNCHRONIZATION,USO_UNSAFE_OBJECT_SYNCHRONIZATION,USO_UNSAFE_ACCESSIBLE_OBJECT_SYNCHRONIZATION,USO_UNSAFE_INHERITABLE_OBJECT_SYNCHRONIZATION,USO_UNSAFE_EXPOSED_OBJECT_SYNCHRONIZATION,USBC_UNSAFE_SYNCHRONIZATION_WITH_BACKING_COLLECTION,USBC_UNSAFE_SYNCHRONIZATION_WITH_ACCESSIBLE_BACKING_COLLECTION,USBC_UNSAFE_SYNCHRONIZATION_WITH_INHERITABLE_BACKING_COLLECTION"/>
+          <Detector class="edu.umd.cs.findbugs.detect.FindEnhancedForLoopVariableModification" speed="fast"
+                    reports="MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE"/>
 
           <!-- Bug Categories -->
           <BugCategory category="NOISE" hidden="true"/>
@@ -745,6 +747,7 @@
           <BugCode abbrev="DA"/>
           <BugCode abbrev="HSM"/>
           <BugCode abbrev="NCR"/>
+          <BugCode abbrev="MEV"/>
           <!-- Bug patterns -->
           <BugPattern abbrev="JUA" type="JUA_DONT_ASSERT_INSTANCEOF_IN_TESTS" category="BAD_PRACTICE" experimental="true" />
           <BugPattern abbrev="AA" type="AA_ASSERTION_OF_ARGUMENTS" category="BAD_PRACTICE" cweid="617"/>
@@ -1360,4 +1363,5 @@
           <BugPattern abbrev="USBC" type="USBC_UNSAFE_SYNCHRONIZATION_WITH_BACKING_COLLECTION" category="SECURITY" />
           <BugPattern abbrev="USBC" type="USBC_UNSAFE_SYNCHRONIZATION_WITH_ACCESSIBLE_BACKING_COLLECTION" category="SECURITY" />
           <BugPattern abbrev="USBC" type="USBC_UNSAFE_SYNCHRONIZATION_WITH_INHERITABLE_BACKING_COLLECTION" category="SECURITY" />
+          <BugPattern abbrev="MEV" type="MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE" category="BAD_PRACTICE" />
 </FindbugsPlugin>

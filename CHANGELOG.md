@@ -27,6 +27,8 @@ Currently the versioning policy of this project follows [Semantic Versioning v2.
     - `USBC_UNSAFE_SYNCHRONIZATION_WITH_ACCESSIBLE_BACKING_COLLECTION` is reported when the backing collection of a lock is made accessible, with methods that update or return the lock, to the outside,
     - `USBC_UNSAFE_SYNCHRONIZATION_WITH_INHERITABLE_BACKING_COLLECTION` is reported when the backing collection of a lock can be altered by subclasses.
       (See [SEI CERT rule LCK00-J](https://wiki.sei.cmu.edu/confluence/display/java/LCK00-J.+Use+private+final+lock+objects+to+synchronize+classes+that+may+interact+with+untrusted+code) and [SEI CERT rule LCK04-J](https://wiki.sei.cmu.edu/confluence/display/java/LCK04-J.+Do+not+synchronize+on+a+collection+view+if+the+backing+collection+is+accessible))
+- New detector `FindEnhancedForLoopVariableModification` and bug type is introduced:
+    - `MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE` is reported when loop variable is modified in an enhanced for loop (See [SEI CERT DCL02-J](https://wiki.sei.cmu.edu/confluence/display/java/DCL02-J.+Do+not+modify+the+collection%27s+elements+during+an+enhanced+for+statement)).
 
 ### Fixed
 - Stop exposing JUnit BOM as a transitive dependency to consumers ([#3908](https://github.com/spotbugs/spotbugs/issues/3908))
