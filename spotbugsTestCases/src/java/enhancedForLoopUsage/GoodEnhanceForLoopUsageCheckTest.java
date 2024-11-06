@@ -1,4 +1,4 @@
-package EnhancedForLoopUsage;
+package enhancedForLoopUsage;
 
 import java.util.Arrays;
 import java.util.List;
@@ -24,16 +24,6 @@ public class GoodEnhanceForLoopUsageCheckTest {
         for (String name : names) {
             System.out.println("Name: " + name);
         }
-    }
-
-    void useStreamToModifyCollection() {
-        List<Double> prices = Arrays.asList(10.5, 20.5, 30.5);
-
-        List<Double> updatedPrices = prices.stream()
-                .map(price -> price * 1.1)
-                .toList();
-
-        updatedPrices.forEach(System.out::println);
     }
 
     void modifyObjectPropertyWithoutChangingCollection() {

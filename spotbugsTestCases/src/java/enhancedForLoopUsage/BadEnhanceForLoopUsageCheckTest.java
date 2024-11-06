@@ -1,4 +1,4 @@
-package EnhancedForLoopUsage;
+package enhancedForLoopUsage;
 
 import java.util.Arrays;
 import java.util.List;
