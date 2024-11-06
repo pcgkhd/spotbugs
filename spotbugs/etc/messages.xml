@@ -1856,6 +1856,15 @@ factory pattern to create these objects.</p>
       ]]>
     </Details>
   </Detector>
+  <Detector class="edu.umd.cs.findbugs.detect.ModifyCollectionInEnhancedForLoop">
+    <Details>
+      <![CDATA[
+          <p>Detects modifications of a collection’s elements during an enhanced for loop, which can lead to
+             unexpected behavior as the loop variable is a local copy and not a reference to the original element.
+          </p>
+      ]]>
+    </Details>
+  </Detector>
   <Detector class="edu.umd.cs.findbugs.detect.SharedVariableAtomicityDetector">
     <Details>
       <![CDATA[
@@ -9670,6 +9679,16 @@ Using floating-point variables should not be used as loop counters, as they are 
       ]]>
     </Details>
   </BugPattern>
+  <BugPattern type="MCE_MODIFY_COLLECTION_IN_ENHANCED_FOR_LOOP">
+    <ShortDescription>Modifying a collection during an enhanced for loop</ShortDescription>
+    <LongDescription>The enhanced for loop at {1} assigns a new value to the loop variable. While this does not affect the iteration order, it may obscure the loop's functionality or indicate a misunderstanding of the enhanced for statement's behavior.</LongDescription>
+    <Details>
+      <![CDATA[
+      <p>It is recommended to declare all loop variables in enhanced for statements as final. This ensures that any assignments to the loop variable are flagged by the compiler, promoting clearer code.</p>
+      <p>See <a href="https://wiki.sei.cmu.edu/confluence/display/java/DCL02-J.+Do+not+modify+the+collection+while+iterating+over+it">SEI CERT rule DCL02-J</a> for more information.</p>
+      ]]>
+    </Details>
+  </BugPattern>
   <BugPattern type="AT_NONATOMIC_64BIT_PRIMITIVE">
     <ShortDescription>This write of this 64-bit primitive variable may not atomic</ShortDescription>
     <LongDescription>This write of the 64-bit primitive variable "{2.name}" may not atomic</LongDescription>
@@ -9968,5 +9987,6 @@ Using floating-point variables should not be used as loop counters, as they are 
   <BugCode abbrev="CWO">Lock closed without being opened in the first place</BugCode>
   <BugCode abbrev="HSM">Avoid method hiding</BugCode>
   <BugCode abbrev="US">Useless suppression</BugCode>
+  <BugCode abbrev="MCE">Modified collection element in enhanced for loop</BugCode>
 </MessageCollection>
 
