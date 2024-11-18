@@ -29,7 +29,7 @@ public class BadEnhanceForLoopUsageCheckTest {
         List<String> names = Arrays.asList("Alice", "Bob", "Charlie");
 
         for (String name : names) {
-            name = "Modified"; // Reassigning loop variable
+            name = "Modified";
         }
     }
 
@@ -37,7 +37,7 @@ public class BadEnhanceForLoopUsageCheckTest {
         List<Integer> numbers = Arrays.asList(1, 2, 3);
 
         for (Integer number : numbers) {
-            number += 10; // Modifying the loop variable
+            number += 10;
         }
     }
 
@@ -47,6 +47,17 @@ public class BadEnhanceForLoopUsageCheckTest {
         for (int number : numbers) {
             number = number + 10;
             System.out.println("Modified number: " + number);
+        }
+    }
+
+    void loopWithinLoop() {
+        int[][] numberArrays = {{1,2,3}, {1,2,3}};
+
+        for (int[] numbers : numberArrays) {
+            for (int number : numbers) {
+                number = number + 10;
+                System.out.println("Modified number: " + number);
+            }
         }
     }
 }
