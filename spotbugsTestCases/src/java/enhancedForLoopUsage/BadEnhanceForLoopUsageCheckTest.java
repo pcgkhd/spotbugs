@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.List;
 
 public class BadEnhanceForLoopUsageCheckTest {
-
     void modifyCollectionWithEnhancedForLoop() {
         List<Integer> list = Arrays.asList(new Integer[]{13, 14, 15});
         boolean first = true;
@@ -41,20 +40,11 @@ public class BadEnhanceForLoopUsageCheckTest {
         }
     }
 
-    void modifyPrimitiveArray() {
-        int[] numbers = {1, 2, 3, 4};
-
-        for (int number : numbers) {
-            number = number + 10;
-            System.out.println("Modified number: " + number);
-        }
-    }
-
     void loopWithinLoop() {
-        int[][] numberArrays = {{1,2,3}, {1,2,3}};
+        List<List<Integer>> numberLists = Arrays.asList(List.of(1,2,4), List.of(1,2,4), List.of(1,2,3));
 
-        for (int[] numbers : numberArrays) {
-            for (int number : numbers) {
+        for (List<Integer> numbers : numberLists) {
+            for (Integer number : numbers) {
                 number = number + 10;
                 System.out.println("Modified number: " + number);
             }
