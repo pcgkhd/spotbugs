@@ -3,12 +3,13 @@ package edu.umd.cs.findbugs.detect;
 import edu.umd.cs.findbugs.BugAccumulator;
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
+import edu.umd.cs.findbugs.ba.XMethod;
 import edu.umd.cs.findbugs.bcel.OpcodeStackDetector;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.JavaClass;
 
-import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
     private final BugAccumulator bugAccumulator;
@@ -18,8 +19,8 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
     }
 
     private LoopState state = LoopState.INITIAL;
-    Deque<Integer> loopVariables = new ArrayDeque<>();
-    private int loopVariableIndex = -1;
+    Map<Integer, Integer> loopVariables = new HashMap<>();
+    private int currentLoopStart = -1;
 
     public ModifyCollectionInEnhancedForLoop(BugReporter bugReporter) {
         this.bugAccumulator = new BugAccumulator(bugReporter);
@@ -29,14 +30,12 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
     public void visitAfter(JavaClass obj) {
         bugAccumulator.reportAccumulatedBugs();
         state = LoopState.INITIAL;
-        loopVariableIndex = -1;
     }
 
     @Override
     public void sawOpcode(int seen) {
-        if (isAstore(seen)) {
-            int currentVariableIndex = getRegisterOperand();
-            if (loopVariables.contains(currentVariableIndex)) {
+        if (isStore(seen) && isRegisterStore()) {
+            if (!loopVariables.isEmpty() && loopVariables.containsKey(getRegisterOperand())) {
                 BugInstance bug = new BugInstance(this, "MCE_MODIFY_COLLECTION_IN_ENHANCED_FOR_LOOP", LOW_PRIORITY)
                         .addClassAndMethod(this)
                         .addSourceLine(this);
@@ -45,62 +44,66 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
             }
         }
         if (seen == Const.GOTO && !loopVariables.isEmpty()) {
-            loopVariables.removeLast();
+            int gotoTarget = getBranchTarget();
+            loopVariables.values().remove(gotoTarget);
             state = LoopState.INITIAL;
         }
 
         switch (state) {
-            case INITIAL:
-                if (seen == Const.INVOKEINTERFACE && getXMethodOperand().getSignature().equals("()Ljava/util/Iterator;")) {
-                    state = LoopState.ITERATOR_CREATE;
-                }
-                break;
+        case INITIAL:
+            if (seen == Const.INVOKEINTERFACE && isMethodSignatureEqualTo("()Ljava/util/Iterator;")) {
+                state = LoopState.ITERATOR_CREATE;
+            }
+            break;
 
-            case ITERATOR_CREATE:
-                if (seen == Const.INVOKEINTERFACE && getXMethodOperand().getSignature().equals("()Z")) {
-                    state = LoopState.HAS_NEXT;
-                } else if (!isAstore(seen) && !isAload(seen)) {
-                    state = LoopState.INITIAL;
-                }
-                break;
-
-            case HAS_NEXT:
-                if (seen == Const.INVOKEINTERFACE && getXMethodOperand().getSignature().equals("()Ljava/lang/Object;")) {
-                    state = LoopState.NEXT_CALL;
-                } else if (seen != Const.IFEQ && !isAload(seen)) {
-                    state = LoopState.INITIAL;
-                }
-                break;
-
-            case NEXT_CALL:
-                if (seen == Const.CHECKCAST) {
-                    state = LoopState.TYPE_CAST;
-                } else {
-                    state = LoopState.INITIAL;
-                }
-                break;
-
-            case TYPE_CAST:
-                if (isAstore(seen)) {
-                    loopVariableIndex = getRegisterOperand();
-                    loopVariables.add(getRegisterOperand());
-                }
+        case ITERATOR_CREATE:
+            if (seen == Const.INVOKEINTERFACE && isMethodSignatureEqualTo("()Z")) {
+                state = LoopState.HAS_NEXT;
+            } else if (!isStore(seen) && !isLoad(seen)) {
                 state = LoopState.INITIAL;
-                break;
+            }
+            currentLoopStart = isLoad(seen) ? getPC() : currentLoopStart;
+            break;
 
-            default:
+        case HAS_NEXT:
+            if (seen == Const.INVOKEINTERFACE && isMethodSignatureEqualTo("()Ljava/lang/Object;")) {
+                state = LoopState.NEXT_CALL;
+            } else if (seen != Const.IFEQ && !isLoad(seen)) {
                 state = LoopState.INITIAL;
-                break;
+            }
+            break;
+
+        case NEXT_CALL:
+            if (seen == Const.CHECKCAST) {
+                state = LoopState.TYPE_CAST;
+            } else {
+                state = LoopState.INITIAL;
+            }
+            break;
+
+        case TYPE_CAST:
+            if (isStore(seen)) {
+                loopVariables.put(getRegisterOperand(), currentLoopStart);
+            }
+            state = LoopState.INITIAL;
+            break;
+
+        default:
+            state = LoopState.INITIAL;
+            break;
         }
     }
 
-    private boolean isAstore(int opcode) {
-        return opcode == Const.ASTORE || opcode == Const.ASTORE_0 || opcode == Const.ASTORE_1
-                || opcode == Const.ASTORE_2 || opcode == Const.ASTORE_3;
+    private boolean isStore(int opcode) {
+        return opcode >= 54 && opcode <= 86;
     }
 
-    private boolean isAload(int opcode) {
-        return opcode == Const.ALOAD || opcode == Const.ALOAD_0 || opcode == Const.ALOAD_1
-                || opcode == Const.ALOAD_2 || opcode == Const.ALOAD_3;
+    private boolean isLoad(int opcode) {
+        return opcode >= 21 && opcode <= 53;
+    }
+
+    private boolean isMethodSignatureEqualTo(String signature) {
+        XMethod xMethod = getXMethodOperand();
+        return xMethod != null && signature.equals(xMethod.getSignature());
     }
 }
