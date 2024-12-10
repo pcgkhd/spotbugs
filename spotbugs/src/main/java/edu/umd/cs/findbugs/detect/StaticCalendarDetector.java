@@ -76,9 +76,9 @@ public class StaticCalendarDetector extends OpcodeStackDetector {
     private static final String PROP_SKIP_SYNCHRONIZED_CHECK = "staticcal.skipsynccheck";
 
     /** The reporter to report to */
-    final private BugReporter reporter;
+    private final BugReporter reporter;
 
-    final private BugAccumulator bugAccumulator;
+    private final BugAccumulator bugAccumulator;
 
     /** Name of the class being inspected */
     private String currentClass;
@@ -224,9 +224,7 @@ public class StaticCalendarDetector extends OpcodeStackDetector {
                 currentMethod = obj;
                 currentLockDataFlow = getClassContext().getLockDataflow(currentMethod);
                 currentCFG = getClassContext().getCFG(currentMethod);
-            } catch (CFGBuilderException e) {
-                reporter.logError("Synchronization check in Static Calendar Detector caught an error.", e);
-            } catch (DataflowAnalysisException e) {
+            } catch (CFGBuilderException | DataflowAnalysisException e) {
                 reporter.logError("Synchronization check in Static Calendar Detector caught an error.", e);
             }
         }

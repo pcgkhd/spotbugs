@@ -60,7 +60,7 @@ import edu.umd.cs.findbugs.classfile.MethodDescriptor;
 import edu.umd.cs.findbugs.internalAnnotations.SlashedClassName;
 import edu.umd.cs.findbugs.util.ClassName;
 
-abstract public class DismantleBytecode extends AnnotationVisitor {
+public abstract class DismantleBytecode extends AnnotationVisitor {
 
     private int opcode;
 
@@ -200,14 +200,13 @@ abstract public class DismantleBytecode extends AnnotationVisitor {
 
     public boolean isMethodCall() {
         switch (opcode) {
-        default:
-            return false;
         case Const.INVOKEINTERFACE:
         case Const.INVOKESPECIAL:
         case Const.INVOKEVIRTUAL:
         case Const.INVOKESTATIC:
             return true;
-
+        default:
+            return false;
         }
     }
 
@@ -287,10 +286,10 @@ abstract public class DismantleBytecode extends AnnotationVisitor {
             throw new IllegalStateException("getRefConstantOperand called but value not available");
         }
         if (refConstantOperand == null) {
-            String dottedClassConstantOperand = getDottedClassConstantOperand();
-            StringBuilder ref = new StringBuilder(dottedClassConstantOperand.length() + nameConstantOperand.length()
+            String dottedClassOperand = getDottedClassConstantOperand();
+            StringBuilder ref = new StringBuilder(dottedClassOperand.length() + nameConstantOperand.length()
                     + sigConstantOperand.length() + 5);
-            ref.append(dottedClassConstantOperand).append(".").append(nameConstantOperand).append(" : ")
+            ref.append(dottedClassOperand).append(".").append(nameConstantOperand).append(" : ")
                     .append(replaceSlashesWithDots(sigConstantOperand));
             refConstantOperand = ref.toString();
         }
@@ -1000,7 +999,7 @@ abstract public class DismantleBytecode extends AnnotationVisitor {
     public void sawClass() {
     }
 
-    static private NumberFormat formatter = NumberFormat.getIntegerInstance();
+    private static NumberFormat formatter = NumberFormat.getIntegerInstance();
     static {
         formatter.setMinimumIntegerDigits(4);
         formatter.setGroupingUsed(false);

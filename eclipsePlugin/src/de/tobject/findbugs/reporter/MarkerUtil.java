@@ -98,7 +98,7 @@ import edu.umd.cs.findbugs.config.ProjectFilterSettings;
 public final class MarkerUtil {
     // group 1 matches class name for all except anonymous classes,
     // group 2 matches the number part of the anonymous class
-    final static Pattern fullName = Pattern.compile("^(.+?)(([$+][0-9].*)?)");
+    static final Pattern fullName = Pattern.compile("^(.+?)(([$+][0-9].*)?)");
 
     private static final IMarker[] EMPTY = new IMarker[0];
 
@@ -287,7 +287,7 @@ public final class MarkerUtil {
         Matcher m = fullName.matcher(qualifiedClassName);
         IType type;
         String innerName = null;
-        if (m.matches() && m.group(2).length() > 0) {
+        if (m.matches() && !m.group(2).isEmpty()) {
 
             String outerQualifiedClassName = m.group(1).replace('$', '.');
             innerName = m.group(2).substring(1);
@@ -396,7 +396,7 @@ public final class MarkerUtil {
         int lineNbr = findChildSourceLine(type, innerName, bug);
         if (lineNbr > 0) {
             String sourceFileStr = getSourceFileHint(type, qualifiedClassName);
-            if (sourceFileStr != null && sourceFileStr.length() > 0) {
+            if (sourceFileStr != null && !sourceFileStr.isEmpty()) {
                 bug.addSourceLine(new SourceLineAnnotation(qualifiedClassName, sourceFileStr, lineNbr, lineNbr, 0, 0));
                 if (Reporter.DEBUG) {
                     System.out.println("1. Fixed start line to: " + lineNbr + " on " + qualifiedClassName + "$" + innerName);

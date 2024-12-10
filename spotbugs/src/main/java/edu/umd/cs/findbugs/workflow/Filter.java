@@ -322,7 +322,7 @@ public class Filter {
         // 31.. = Long.MAX
         // if roundToLater == false, ..-1 = Long.MIN, 0..9 = 0, 10..19 = 1,
         // 20..29 = 2, 30..39 = 3, 40 .. = 4
-        static private long getAppropriateSeq(SortedMap<Long, AppVersion> timeStamps, long when, boolean roundToLaterVersion) {
+        private static long getAppropriateSeq(SortedMap<Long, AppVersion> timeStamps, long when, boolean roundToLaterVersion) {
             if (roundToLaterVersion) {
                 SortedMap<Long, AppVersion> geq = timeStamps.tailMap(when);
                 if (geq.isEmpty()) {
@@ -525,7 +525,7 @@ public class Filter {
         @Override
         protected void handleOption(String option, String optionExtraPart) throws IOException {
             option = option.substring(1);
-            if (optionExtraPart.length() == 0) {
+            if (optionExtraPart.isEmpty()) {
                 setField(option, true);
             } else {
                 setField(option, Boolean.parseBoolean(optionExtraPart));
