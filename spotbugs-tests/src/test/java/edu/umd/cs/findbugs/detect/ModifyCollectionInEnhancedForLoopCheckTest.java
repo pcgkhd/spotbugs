@@ -11,13 +11,15 @@ public class ModifyCollectionInEnhancedForLoopCheckTest extends AbstractIntegrat
     void testBadEnhancedForLoopUsageChecks() {
         performAnalysis("enhancedForLoopUsage/BadEnhanceForLoopUsageCheckTest.class");
 
-        assertBugTypeCount(MCE_BUG_TYPE, 4);
+        assertBugTypeCount(MCE_BUG_TYPE, 6);
 
         final String className = "BadEnhanceForLoopUsageCheckTest";
-        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyCollectionWithEnhancedForLoop", 15);
-        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyElementDirectly", 31);
-        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyArrayListDirectly", 39);
-        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "loopWithinLoop", 48);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyCollectionWithEnhancedForLoop", 16);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyElementDirectly", 32);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyArrayListDirectly", 40);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "loopWithinLoop", 49);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "notEnhancedLoopWithinEnhancedLoops", 61);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyOuterLoopVariable", 77);
     }
 
     @Test

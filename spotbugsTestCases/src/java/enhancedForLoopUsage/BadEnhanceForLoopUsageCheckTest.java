@@ -1,5 +1,6 @@
 package enhancedForLoopUsage;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -41,13 +42,39 @@ public class BadEnhanceForLoopUsageCheckTest {
     }
 
     void loopWithinLoop() {
-        List<List<Integer>> numberLists = Arrays.asList(List.of(1,2,4), List.of(1,2,4), List.of(1,2,3));
+        List<List<Integer>> numberLists = Arrays.asList(List.of(1, 2, 4), List.of(1, 2, 4), List.of(1, 2, 3));
 
         for (List<Integer> numbers : numberLists) {
             for (Integer number : numbers) {
                 number = number + 10;
                 System.out.println("Modified number: " + number);
             }
+        }
+    }
+
+    void notEnhancedLoopWithinEnhancedLoops() {
+        List<List<Integer>> numberLists = Arrays.asList(List.of(1, 2, 4), List.of(1, 2, 4), List.of(1, 2, 3));
+
+        for (List<Integer> numbers : numberLists) {
+            for (int i = 0; i < 10; i++) {
+                for (Integer number : numbers) {
+                    number = number + 10;
+                    System.out.println("Modified number: " + number);
+                }
+            }
+        }
+    }
+
+    void modifyOuterLoopVariable() {
+        List<List<Integer>> numberLists = Arrays.asList(List.of(1, 2, 4), List.of(1, 2, 4), List.of(1, 2, 3));
+
+        for (List<Integer> numbers : numberLists) {
+            for (int i = 0; i < 10; i++) {
+                for (Integer number : numbers) {
+                    System.out.println("Modified number: " + number);
+                }
+            }
+            numbers = new ArrayList<>();
         }
     }
 }
