@@ -81,6 +81,8 @@ Currently the versioning policy of this project follows [Semantic Versioning v2.
 - SimpleDateFormat, DateTimeFormatter, FastDateFormat string check for bad combinations of flag formatting ([#637](https://github.com/spotbugs/spotbugs/issues/637))
 - New detector `ResourceInMultipleThreadsDetector` and introduced new bug type:
   - `AT_UNSAFE_RESOURCE_ACCESS_IN_THREAD` is reported in case of unsafe resource access in multiple threads.
+- New detector `ModifyCollectionInEnhancedForLoop` and bug type is introduced:
+  - `MCE_MODIFY_COLLECTION_IN_ENHANCED_FOR_LOOP` is reported when a collection's elements are modified during an enhanced for loop (See [SEI CERT DCL02-J](https://wiki.sei.cmu.edu/confluence/display/java/DCL02-J.+Do+not+modify+the+collection%27s+elements+during+an+enhanced+for+statement)).
 
 ### Fixed
 - Do not consider Records as Singletons ([#2981](https://github.com/spotbugs/spotbugs/issues/2981))
