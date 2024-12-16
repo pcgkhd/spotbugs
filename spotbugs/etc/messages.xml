@@ -9344,12 +9344,12 @@ Using floating-point variables should not be used as loop counters, as they are 
   </BugPattern>
   <BugPattern type="MCE_MODIFY_COLLECTION_IN_ENHANCED_FOR_LOOP">
     <ShortDescription>Modifying a collection during an enhanced for loop</ShortDescription>
-    <LongDescription>The enhanced for loop at {1} assigns a new value to the loop variable. While this does not affect the iteration order, it may obscure the loop's functionality or indicate a misunderstanding of the enhanced for statement's behavior.</LongDescription>
+    <LongDescription>The enhanced for loop at line {2} modifies the loop variable, which can obscure its functionality.</LongDescription>
     <Details>
       <![CDATA[
-      <p>It is recommended to declare all loop variables in enhanced for statements as final. This ensures that any assignments to the loop variable are flagged by the compiler, promoting clearer code.</p>
-      <p>See <a href="https://wiki.sei.cmu.edu/confluence/display/java/DCL02-J.+Do+not+modify+the+collection+while+iterating+over+it">SEI CERT rule DCL02-J</a> for more information.</p>
-      ]]>
+    <p>It is recommended to declare all loop variables in enhanced for statements as final. This ensures that any assignments to the loop variable are flagged by the compiler, promoting clearer code.</p>
+    <p>See <a href="https://wiki.sei.cmu.edu/confluence/display/java/DCL02-J.+Do+not+modify+the+collection+while+iterating+over+it">SEI CERT rule DCL02-J</a> for more information.</p>
+    ]]>
     </Details>
   </BugPattern>
   <!--

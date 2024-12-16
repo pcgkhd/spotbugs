@@ -27,7 +27,9 @@ import org.apache.bcel.Const;
 import org.apache.bcel.classfile.JavaClass;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
     private final BugAccumulator bugAccumulator;
@@ -37,8 +39,19 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
     }
 
     private LoopState state = LoopState.INITIAL;
-    Map<Integer, Integer> loopVariables = new HashMap<>();
-    private int currentLoopStart = -1;
+    private final Map<Integer, Integer> variableToLoopStart = new HashMap<>();
+    private int currentLoopStart;
+    private static final Set<Integer> STORE_OPCODES = new HashSet<>();
+    private static final Set<Integer> LOAD_OPCODES = new HashSet<>();
+
+    static {
+        for (int i = Const.ISTORE; i <= Const.SASTORE; i++) {
+            STORE_OPCODES.add(i);
+        }
+        for (int i = Const.ILOAD; i <= Const.SALOAD; i++) {
+            LOAD_OPCODES.add(i);
+        }
+    }
 
     public ModifyCollectionInEnhancedForLoop(BugReporter bugReporter) {
         this.bugAccumulator = new BugAccumulator(bugReporter);
@@ -53,7 +66,7 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
     @Override
     public void sawOpcode(int seen) {
         if (isStore(seen) && isRegisterStore()) {
-            if (!loopVariables.isEmpty() && loopVariables.containsKey(getRegisterOperand())) {
+            if (!variableToLoopStart.isEmpty() && variableToLoopStart.containsKey(getRegisterOperand())) {
                 BugInstance bug = new BugInstance(this, "MCE_MODIFY_COLLECTION_IN_ENHANCED_FOR_LOOP", LOW_PRIORITY)
                         .addClassAndMethod(this)
                         .addSourceLine(this);
@@ -61,21 +74,21 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
                 state = LoopState.INITIAL;
             }
         }
-        if (seen == Const.GOTO && !loopVariables.isEmpty()) {
+        if (seen == Const.GOTO && !variableToLoopStart.isEmpty()) {
             int gotoTarget = getBranchTarget();
-            loopVariables.values().remove(gotoTarget);
+            variableToLoopStart.values().remove(gotoTarget);
             state = LoopState.INITIAL;
         }
 
         switch (state) {
         case INITIAL:
-            if (seen == Const.INVOKEINTERFACE && isMethodSignatureEqualTo("()Ljava/util/Iterator;")) {
+            if (seen == Const.INVOKEINTERFACE && isMethodSignatureEqualTo(getXMethodOperand())) {
                 state = LoopState.ITERATOR_CREATE;
             }
             break;
 
         case ITERATOR_CREATE:
-            if (seen == Const.INVOKEINTERFACE && isMethodSignatureEqualTo("()Z")) {
+            if (seen == Const.INVOKEINTERFACE && isMethodSignatureEqualTo("()Z", "hasNext", getXMethodOperand())) {
                 state = LoopState.HAS_NEXT;
             } else if (!isStore(seen) && !isLoad(seen)) {
                 state = LoopState.INITIAL;
@@ -84,7 +97,7 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
             break;
 
         case HAS_NEXT:
-            if (seen == Const.INVOKEINTERFACE && isMethodSignatureEqualTo("()Ljava/lang/Object;")) {
+            if (seen == Const.INVOKEINTERFACE && isMethodSignatureEqualTo("()Ljava/lang/Object;", "next", getXMethodOperand())) {
                 state = LoopState.NEXT_CALL;
             } else if (seen != Const.IFEQ && !isLoad(seen)) {
                 state = LoopState.INITIAL;
@@ -101,7 +114,7 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
 
         case TYPE_CAST:
             if (isStore(seen)) {
-                loopVariables.put(getRegisterOperand(), currentLoopStart);
+                variableToLoopStart.put(getRegisterOperand(), currentLoopStart);
             }
             state = LoopState.INITIAL;
             break;
@@ -113,15 +126,18 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
     }
 
     private boolean isStore(int opcode) {
-        return opcode >= 54 && opcode <= 86;
+        return STORE_OPCODES.contains(opcode);
     }
 
     private boolean isLoad(int opcode) {
-        return opcode >= 21 && opcode <= 53;
+        return LOAD_OPCODES.contains(opcode);
     }
 
-    private boolean isMethodSignatureEqualTo(String signature) {
-        XMethod xMethod = getXMethodOperand();
-        return xMethod != null && signature.equals(xMethod.getSignature());
+    private static boolean isMethodSignatureEqualTo(String signature, String methodName, XMethod xMethod) {
+        return xMethod != null && signature.equals(xMethod.getSignature()) && methodName.equals(xMethod.getName()) && "java/util/Iterator".equals(xMethod.getMethodDescriptor().getSlashedClassName());
+    }
+
+    private static boolean isMethodSignatureEqualTo(XMethod xMethod) {
+        return xMethod != null && "()Ljava/util/Iterator;".equals(xMethod.getSignature()) && "iterator".equals(xMethod.getName());
     }
 }
