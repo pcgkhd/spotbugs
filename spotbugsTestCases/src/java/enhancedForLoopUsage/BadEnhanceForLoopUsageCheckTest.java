@@ -77,4 +77,15 @@ public class BadEnhanceForLoopUsageCheckTest {
             numbers = new ArrayList<>();
         }
     }
+
+    void multipleEnhancedLoopVariableModification() {
+        List<List<Integer>> numberLists = Arrays.asList(List.of(1, 2, 4), List.of(1, 2, 4), List.of(1, 2, 3));
+
+        for (List<Integer> numbers : numberLists) {
+            for (Integer number : numbers) {
+                number = number + 10;
+            }
+            numbers = new ArrayList<>();
+        }
+    }
 }
