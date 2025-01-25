@@ -9357,11 +9357,19 @@ Using floating-point variables should not be used as loop counters, as they are 
   </BugPattern>
   <BugPattern type="MCE_MODIFY_COLLECTION_IN_ENHANCED_FOR_LOOP">
     <ShortDescription>Modifying a collection during an enhanced for loop</ShortDescription>
-    <LongDescription>The enhanced for loop at line {2} modifies the loop variable, which can obscure its functionality.</LongDescription>
+    <LongDescription>The enhanced for loop at line {2} modifies the collection, which can lead to a ConcurrentModificationException or unexpected behavior.</LongDescription>
     <Details>
       <![CDATA[
-    <p>It is recommended to declare all loop variables in enhanced for statements as final. This ensures that any assignments to the loop variable are flagged by the compiler, promoting clearer code.</p>
-    <p>See <a href="https://wiki.sei.cmu.edu/confluence/display/java/DCL02-J.+Do+not+modify+the+collection+while+iterating+over+it">SEI CERT rule DCL02-J</a> for more information.</p>
+    <p>Modifying a collection's element while iterating over it using an enhanced for loop can result in a ConcurrentModificationException or unexpected behavior.
+     This occurs because the enhanced for loop relies on an Iterator, and modifying the iterator does not actually change the corresponding element in the collection.
+     This can lead to unpredictable and hard-to-read code. In worse cases, attempting to skip an iteration or modify the iterator may throw a ConcurrentModificationException.</p>
+    <ul>
+      <li><b>Declare the loop variable as final:</b> By marking the loop variable as <code>final</code>, you prevent accidental modifications to the variable during iteration. This makes the code more predictable and easier to understand.</li>
+      <li>Avoid modifying the elements of the collection during iteration. If you need to update the elements, consider using a traditional for loop with an index or an explicit Iterator.</li>
+      <li>If you need to replace elements, consider creating a new collection with the updated elements instead of modifying the original collection during iteration.</li>
+    </ul>
+
+    <p>For more details, see <a href="https://wiki.sei.cmu.edu/confluence/display/java/DCL02-J.+Do+not+modify+the+collection+while+iterating+over+it">SEI CERT rule DCL02-J</a>.</p>
     ]]>
     </Details>
   </BugPattern>

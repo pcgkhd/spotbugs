@@ -15,13 +15,13 @@ public class ModifyCollectionInEnhancedForLoopCheckTest extends AbstractIntegrat
 
         final String className = "BadEnhanceForLoopUsageCheckTest";
         assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyCollectionWithEnhancedForLoop", 16);
-        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyElementDirectly", 32);
-        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyArrayListDirectly", 40);
-        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "loopWithinLoop", 49);
-        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "notEnhancedLoopWithinEnhancedLoops", 61);
-        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyOuterLoopVariable", 77);
-        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "multipleEnhancedLoopVariableModification", 86);
-        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyOuterLoopVariable", 88);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyStringElement", 31);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "loopWithinLoop", 40);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "notEnhancedLoopWithinEnhancedLoops", 51);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyOuterLoopVariable", 66);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "multipleEnhancedLoopVariableModification", 75);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "multipleEnhancedLoopVariableModification", 77);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "arrayEnhancedForLoop", 85);
     }
 
     @Test

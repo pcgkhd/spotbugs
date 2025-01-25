@@ -13,31 +13,22 @@ public class BadEnhanceForLoopUsageCheckTest {
         for (Integer i : list) {
             if (first) {
                 first = false;
-                i = new Integer(99);
+                i = 99;
             }
             System.out.println(" New item: " + i);
         }
 
         System.out.println("Modified list?");
-        for (
-                Integer i : list) {
+        for (Integer i : list) {
             System.out.println("List item: " + i);
         }
     }
 
-    void modifyElementDirectly() {
+    void modifyStringElement() {
         List<String> names = Arrays.asList("Alice", "Bob", "Charlie");
 
         for (String name : names) {
             name = "Modified";
-        }
-    }
-
-    void modifyArrayListDirectly() {
-        List<Integer> numbers = Arrays.asList(1, 2, 3);
-
-        for (Integer number : numbers) {
-            number += 10;
         }
     }
 
@@ -47,7 +38,6 @@ public class BadEnhanceForLoopUsageCheckTest {
         for (List<Integer> numbers : numberLists) {
             for (Integer number : numbers) {
                 number = number + 10;
-                System.out.println("Modified number: " + number);
             }
         }
     }
@@ -59,7 +49,6 @@ public class BadEnhanceForLoopUsageCheckTest {
             for (int i = 0; i < 10; i++) {
                 for (Integer number : numbers) {
                     number = number + 10;
-                    System.out.println("Modified number: " + number);
                 }
             }
         }
@@ -86,6 +75,14 @@ public class BadEnhanceForLoopUsageCheckTest {
                 number = number + 10;
             }
             numbers = new ArrayList<>();
+        }
+    }
+
+    void arrayEnhancedForLoop() {
+        int[] numbers = {1, 2, 3};
+
+        for (int number : numbers) {
+            number = 2;
         }
     }
 }
