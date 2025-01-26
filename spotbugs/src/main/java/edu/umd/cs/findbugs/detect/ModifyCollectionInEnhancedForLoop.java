@@ -33,12 +33,16 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
     private final BugReporter bugReporter;
 
     private enum LoopState {
-        INITIAL, ITERATOR_CREATE, HAS_NEXT, NEXT_CALL, TYPE_CAST
+        INITIAL, ITERATOR_CREATE, HAS_NEXT, NEXT_CALL, TYPE_CAST, VARIABLE_CREATE, CONDITION
     }
 
-    private LoopState state = LoopState.INITIAL;
+    private LoopState collectionLoopState = LoopState.INITIAL;
+    private LoopState arrayLoopState = LoopState.INITIAL;
     private final Map<Integer, Integer> variableToLoopStart = new HashMap<>();
-    private int currentLoopStart;
+    private int collectionLoopStart;
+    private int arrayLoopStart;
+    private int arrayOpcodeCounter;
+    private int collectionOpcodeCounter;
     private static final Set<Short> STORE_OPCODES = Set.of(
             Const.ISTORE, Const.LSTORE, Const.FSTORE, Const.DSTORE, Const.ASTORE,
             Const.ISTORE_0, Const.ISTORE_1, Const.ISTORE_2, Const.ISTORE_3,
@@ -67,7 +71,8 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
 
     @Override
     public void visitAfter(JavaClass obj) {
-        state = LoopState.INITIAL;
+        collectionLoopState = LoopState.INITIAL;
+        arrayLoopState = LoopState.INITIAL;
     }
 
     @Override
@@ -77,56 +82,105 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
                     .addClassAndMethod(this)
                     .addSourceLine(this);
             bugReporter.reportBug(bug);
-            state = LoopState.INITIAL;
+            collectionLoopState = LoopState.INITIAL;
+            arrayLoopState = LoopState.INITIAL;
         }
+
         if (seen == Const.GOTO && !variableToLoopStart.isEmpty()) {
             int gotoTarget = getBranchTarget();
             variableToLoopStart.values().remove(gotoTarget);
-            state = LoopState.INITIAL;
+            collectionLoopState = LoopState.INITIAL;
+            arrayLoopState = LoopState.INITIAL;
         }
 
-        switch (state) {
-        case INITIAL:
-            if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Ljava/util/Iterator;", "iterator", getXMethodOperand(), true)) {
-                state = LoopState.ITERATOR_CREATE;
-            }
-            break;
+        checkCollectionEnhancedLoop(seen);
+        checkArrayEnhancedLoop(seen);
+    }
 
-        case ITERATOR_CREATE:
-            if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Z", "hasNext", getXMethodOperand(), false)) {
-                state = LoopState.HAS_NEXT;
-            } else if (!isStore(seen) && !isLoad(seen)) {
-                state = LoopState.INITIAL;
-            }
-            currentLoopStart = isLoad(seen) ? getPC() : currentLoopStart;
-            break;
+    private void checkCollectionEnhancedLoop(int seen) {
+        switch (collectionLoopState) {
+            case INITIAL:
+                if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Ljava/util/Iterator;", "iterator", getXMethodOperand(), true)) {
+                    collectionOpcodeCounter++;
+                    collectionLoopState = LoopState.ITERATOR_CREATE;
+                }
+                break;
 
-        case HAS_NEXT:
-            if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Ljava/lang/Object;", "next", getXMethodOperand(), false)) {
-                state = LoopState.NEXT_CALL;
-            } else if (seen != Const.IFEQ && !isLoad(seen)) {
-                state = LoopState.INITIAL;
-            }
-            break;
+            case ITERATOR_CREATE:
+                collectionOpcodeCounter++;
+                if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Z", "hasNext", getXMethodOperand(), false)) {
+                    collectionLoopState = LoopState.HAS_NEXT;
+                } else if (!isStore(seen) && !isLoad(seen)) {
+                    resetCollectionState();
+                }
+                collectionLoopStart = isLoad(seen) ? getPC() : collectionLoopStart;
+                break;
 
-        case NEXT_CALL:
-            if (seen == Const.CHECKCAST) {
-                state = LoopState.TYPE_CAST;
-            } else {
-                state = LoopState.INITIAL;
-            }
-            break;
+            case HAS_NEXT:
+                collectionOpcodeCounter++;
+                if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Ljava/lang/Object;", "next", getXMethodOperand(), false)) {
+                    collectionLoopState = LoopState.NEXT_CALL;
+                } else if (seen != Const.IFEQ && !isLoad(seen)) {
+                    resetCollectionState();
+                }
+                break;
 
-        case TYPE_CAST:
-            if (isStore(seen)) {
-                variableToLoopStart.put(getRegisterOperand(), currentLoopStart);
-            }
-            state = LoopState.INITIAL;
-            break;
+            case NEXT_CALL:
+                collectionOpcodeCounter++;
+                if (seen == Const.CHECKCAST) {
+                    collectionLoopState = LoopState.TYPE_CAST;
+                } else {
+                    resetCollectionState();
+                }
+                break;
 
-        default:
-            state = LoopState.INITIAL;
-            break;
+            case TYPE_CAST:
+                if (isStore(seen) && collectionOpcodeCounter == 8) {
+                    variableToLoopStart.put(getRegisterOperand(), collectionLoopStart);
+                }
+                resetCollectionState();
+                break;
+
+            default:
+                resetCollectionState();
+                break;
+        }
+    }
+
+    private void checkArrayEnhancedLoop(int seen) {
+        switch (arrayLoopState) {
+            case INITIAL:
+                if (isLoad(seen)) {
+                    arrayOpcodeCounter++;
+                    arrayLoopState = LoopState.VARIABLE_CREATE;
+                }
+                break;
+
+            case VARIABLE_CREATE:
+                arrayOpcodeCounter++;
+                if (seen == Const.IF_ICMPGE && arrayOpcodeCounter == 10) {
+                    arrayLoopState = LoopState.CONDITION;
+                } else if (isLoad(seen) && arrayOpcodeCounter == 8) {
+                    arrayLoopStart = isLoad(seen) ? getPC() : collectionLoopStart;
+                } else if ((!isStore(seen) && !isLoad(seen) && seen != Const.ARRAYLENGTH && seen != Const.ICONST_0)
+                        || arrayOpcodeCounter >= 10) {
+                    resetArrayState();
+                }
+                break;
+
+            case CONDITION:
+                arrayOpcodeCounter++;
+                if (isStore(seen) && arrayOpcodeCounter == 14) {
+                    variableToLoopStart.put(getRegisterOperand(), arrayLoopStart);
+                    resetArrayState();
+                } else if (!isLoad(seen) || arrayOpcodeCounter >= 14) {
+                    resetArrayState();
+                }
+                break;
+
+            default:
+                resetArrayState();
+                break;
         }
     }
 
@@ -144,5 +198,15 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
                 && expectedSignature.equals(methodToCheck.getSignature())
                 && expectedMethodName.equals(methodToCheck.getName())
                 && (skipIteratorCheck || "java.util.Iterator".equals(methodToCheck.getClassName()));
+    }
+
+    private void resetCollectionState() {
+        collectionOpcodeCounter = 0;
+        collectionLoopState = LoopState.INITIAL;
+    }
+
+    private void resetArrayState() {
+        arrayOpcodeCounter = 0;
+        arrayLoopState = LoopState.INITIAL;
     }
 }
