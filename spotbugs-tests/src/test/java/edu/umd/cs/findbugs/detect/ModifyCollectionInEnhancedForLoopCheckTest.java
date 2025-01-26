@@ -11,7 +11,7 @@ public class ModifyCollectionInEnhancedForLoopCheckTest extends AbstractIntegrat
     void testBadEnhancedForLoopUsageChecks() {
         performAnalysis("enhancedForLoopUsage/BadEnhanceForLoopUsageCheckTest.class");
 
-        assertBugTypeCount(MCE_BUG_TYPE, 8);
+        assertBugTypeCount(MCE_BUG_TYPE, 11);
 
         final String className = "BadEnhanceForLoopUsageCheckTest";
         assertBugInMethodAtLine(MCE_BUG_TYPE, className, "modifyCollectionWithEnhancedForLoop", 16);
@@ -22,6 +22,9 @@ public class ModifyCollectionInEnhancedForLoopCheckTest extends AbstractIntegrat
         assertBugInMethodAtLine(MCE_BUG_TYPE, className, "multipleEnhancedLoopVariableModification", 75);
         assertBugInMethodAtLine(MCE_BUG_TYPE, className, "multipleEnhancedLoopVariableModification", 77);
         assertBugInMethodAtLine(MCE_BUG_TYPE, className, "arrayEnhancedForLoop", 85);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "charArrayEnhancedForLoop", 93);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "mixedForLoopsWithEnhancedLoops", 105);
+        assertBugInMethodAtLine(MCE_BUG_TYPE, className, "mixedForLoopsWithEnhancedLoops", 107);
     }
 
     @Test

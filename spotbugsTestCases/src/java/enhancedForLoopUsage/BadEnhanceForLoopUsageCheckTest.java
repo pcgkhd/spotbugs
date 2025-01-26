@@ -85,4 +85,27 @@ public class BadEnhanceForLoopUsageCheckTest {
             number = 2;
         }
     }
+
+    void charArrayEnhancedForLoop() {
+        char[] characters = {'a', 'b', 'c'};
+
+        for (char character : characters) {
+            character = 'd';
+        }
+    }
+
+    void mixedForLoopsWithEnhancedLoops() {
+        char[] characters = {'a', 'b', 'c'};
+        List<Integer> numbers = List.of(1, 2, 3);
+
+        for (int i = 0; i < 5; i++) {
+            i = i + 1;
+            for (Integer number : numbers) {
+                for (char character : characters) {
+                    character = 'd';
+                }
+                number = 2;
+            }
+        }
+    }
 }
