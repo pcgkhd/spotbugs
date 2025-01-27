@@ -30,19 +30,16 @@ import java.util.Map;
 import java.util.Set;
 
 public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
-    private final BugReporter bugReporter;
+    private static final int COLLECTION_ENHANCED_LOOP_BYTECODE_LENGTH = 8;
+    private static final int COLLECTION_ENHANCED_LOOP_VARIABLE_POSITION = 3;
+    private static final int ARRAY_ENHANCED_LOOP_BYTECODE_LENGTH = 14;
+    private static final int ARRAY_ENHANCED_LOOP_CONDITION_POSITION = 10;
+    private static final int ARRAY_ENHANCED_LOOP_VARIABLE_POSITION = 8;
 
     private enum LoopState {
         INITIAL, ITERATOR_CREATE, HAS_NEXT, NEXT_CALL, TYPE_CAST, VARIABLE_CREATE, CONDITION
     }
 
-    private LoopState collectionLoopState = LoopState.INITIAL;
-    private LoopState arrayLoopState = LoopState.INITIAL;
-    private final Map<Integer, Integer> variableToLoopStart = new HashMap<>();
-    private int collectionLoopStart;
-    private int arrayLoopStart;
-    private int arrayOpcodeCounter;
-    private int collectionOpcodeCounter;
     private static final Set<Short> STORE_OPCODES = Set.of(
             Const.ISTORE, Const.LSTORE, Const.FSTORE, Const.DSTORE, Const.ASTORE,
             Const.ISTORE_0, Const.ISTORE_1, Const.ISTORE_2, Const.ISTORE_3,
@@ -65,6 +62,16 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
             Const.AALOAD, Const.BALOAD, Const.CALOAD, Const.SALOAD
     );
 
+    private final BugReporter bugReporter;
+
+    private LoopState collectionLoopState = LoopState.INITIAL;
+    private LoopState arrayLoopState = LoopState.INITIAL;
+    private final Map<Integer, Integer> variableToLoopStart = new HashMap<>();
+    private int collectionLoopStart;
+    private int arrayLoopStart;
+    private int arrayOpcodeCounter;
+    private int collectionOpcodeCounter;
+
     public ModifyCollectionInEnhancedForLoop(BugReporter bugReporter) {
         this.bugReporter = bugReporter;
     }
@@ -75,6 +82,14 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
         arrayLoopState = LoopState.INITIAL;
     }
 
+    /**
+     * https://docs.oracle.com/javase/1.5.0/docs/guide/language/foreach.html
+     *
+     * There are two ways to create enhanced loop in Java.
+     * One is by using Collection as the data source. In this occasion java creates an iterator, and iterates through the
+     * Collection with this iterator.
+     * The other way is to use array as the data source. This time Java creates index variable instead of iterator.
+     */
     @Override
     public void sawOpcode(int seen) {
         if (isStore(seen) && !variableToLoopStart.isEmpty() && variableToLoopStart.containsKey(getRegisterOperand())) {
@@ -100,6 +115,8 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
     private void checkCollectionEnhancedLoop(int seen) {
         switch (collectionLoopState) {
             case INITIAL:
+                // Initial state: waiting for the `iterator()` method call.
+                // The `iterator()` method call indicates the start of an enhanced `for` loop.
                 if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Ljava/util/Iterator;", "iterator", getXMethodOperand(), true)) {
                     collectionOpcodeCounter++;
                     collectionLoopState = LoopState.ITERATOR_CREATE;
@@ -107,16 +124,21 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
                 break;
 
             case ITERATOR_CREATE:
+                // After the `iterator()` method call, wait for the `hasNext()` method call.
+                // The `hasNext()` method call indicates the condition check of the loop.
                 collectionOpcodeCounter++;
                 if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Z", "hasNext", getXMethodOperand(), false)) {
                     collectionLoopState = LoopState.HAS_NEXT;
+                } else if (isLoad(seen) && collectionOpcodeCounter == COLLECTION_ENHANCED_LOOP_VARIABLE_POSITION) {
+                    collectionLoopStart = isLoad(seen) ? getPC() : collectionLoopStart;
                 } else if (!isStore(seen) && !isLoad(seen)) {
                     resetCollectionState();
                 }
-                collectionLoopStart = isLoad(seen) ? getPC() : collectionLoopStart;
                 break;
 
             case HAS_NEXT:
+                // After the `hasNext()` method call, wait for the `next()` method call.
+                // The `next()` method call indicates the start of the loop body.
                 collectionOpcodeCounter++;
                 if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Ljava/lang/Object;", "next", getXMethodOperand(), false)) {
                     collectionLoopState = LoopState.NEXT_CALL;
@@ -126,6 +148,8 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
                 break;
 
             case NEXT_CALL:
+                // After the `next()` method call, wait for the `CHECKCAST` opcode.
+                // The `CHECKCAST` opcode indicates that we are checking the type of the loop variable.
                 collectionOpcodeCounter++;
                 if (seen == Const.CHECKCAST) {
                     collectionLoopState = LoopState.TYPE_CAST;
@@ -135,7 +159,9 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
                 break;
 
             case TYPE_CAST:
-                if (isStore(seen) && collectionOpcodeCounter == 8) {
+                // After the `CHECKCAST` opcode, save the loop variable.
+                // Later if this loop variable is modified, then bug should be reported.
+                if (isStore(seen) && collectionOpcodeCounter == COLLECTION_ENHANCED_LOOP_BYTECODE_LENGTH) {
                     variableToLoopStart.put(getRegisterOperand(), collectionLoopStart);
                 }
                 resetCollectionState();
@@ -150,6 +176,8 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
     private void checkArrayEnhancedLoop(int seen) {
         switch (arrayLoopState) {
             case INITIAL:
+                // Initial state: waiting for a `load` opcode to start tracking the array loop.
+                // A `load` opcode indicates that the array reference is being loaded onto the stack.
                 if (isLoad(seen)) {
                     arrayOpcodeCounter++;
                     arrayLoopState = LoopState.VARIABLE_CREATE;
@@ -157,23 +185,30 @@ public class ModifyCollectionInEnhancedForLoop extends OpcodeStackDetector {
                 break;
 
             case VARIABLE_CREATE:
+                // After the array reference is loaded, track the initialization of the loop variables.
+                // This includes loading the array length, initializing the loop variable, and checking the loop condition.
                 arrayOpcodeCounter++;
-                if (seen == Const.IF_ICMPGE && arrayOpcodeCounter == 10) {
+                if (seen == Const.IF_ICMPGE && arrayOpcodeCounter == ARRAY_ENHANCED_LOOP_CONDITION_POSITION) {
+                    // The `IF_ICMPGE` opcode checks if the loop variable is greater than or equal to the array length.
+                    // This indicates the loop condition check.
                     arrayLoopState = LoopState.CONDITION;
-                } else if (isLoad(seen) && arrayOpcodeCounter == 8) {
+                } else if (isLoad(seen) && arrayOpcodeCounter == ARRAY_ENHANCED_LOOP_VARIABLE_POSITION) {
+                    // If we see a `load` opcode at the expected step, store the starting point of the loop.
                     arrayLoopStart = isLoad(seen) ? getPC() : collectionLoopStart;
                 } else if ((!isStore(seen) && !isLoad(seen) && seen != Const.ARRAYLENGTH && seen != Const.ICONST_0)
-                        || arrayOpcodeCounter >= 10) {
+                        || arrayOpcodeCounter >= ARRAY_ENHANCED_LOOP_CONDITION_POSITION) {
                     resetArrayState();
                 }
                 break;
 
             case CONDITION:
+                // After the loop condition check, enhanced loop stores an array element into a variable, using the loop variable as the index
+                // Later if this variable is modified, then bug should be reported.
                 arrayOpcodeCounter++;
-                if (isStore(seen) && arrayOpcodeCounter == 14) {
+                if (isStore(seen) && arrayOpcodeCounter == ARRAY_ENHANCED_LOOP_BYTECODE_LENGTH) {
                     variableToLoopStart.put(getRegisterOperand(), arrayLoopStart);
                     resetArrayState();
-                } else if (!isLoad(seen) || arrayOpcodeCounter >= 14) {
+                } else if (!isLoad(seen) || arrayOpcodeCounter >= ARRAY_ENHANCED_LOOP_BYTECODE_LENGTH) {
                     resetArrayState();
                 }
                 break;
