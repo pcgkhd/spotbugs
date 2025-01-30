@@ -5,9 +5,19 @@ This is the changelog for SpotBugs. This follows [Keep a Changelog v1.0.0](http:
 
 Currently the versioning policy of this project follows [Semantic Versioning v2.0.0](http://semver.org/spec/v2.0.0.html).
 
-## Unreleased - 2024-??-??
+## Unreleased - 2025-??-??
 - New detector `ModifyCollectionInEnhancedForLoop` and bug type is introduced:
-  - `MCE_MODIFY_COLLECTION_IN_ENHANCED_FOR_LOOP` is reported when a collection's elements are modified during an enhanced for loop (See [SEI CERT DCL02-J](https://wiki.sei.cmu.edu/confluence/display/java/DCL02-J.+Do+not+modify+the+collection%27s+elements+during+an+enhanced+for+statement)).
+    - `MCE_MODIFY_COLLECTION_IN_ENHANCED_FOR_LOOP` is reported when a collection's elements are modified during an enhanced for loop (See [SEI CERT DCL02-J](https://wiki.sei.cmu.edu/confluence/display/java/DCL02-J.+Do+not+modify+the+collection%27s+elements+during+an+enhanced+for+statement)).
+
+### Fixed
+- Fixed the parsing of generics methods in `ThrowingExceptions` ([#3267](https://github.com/spotbugs/spotbugs/issues/3267))
+- Accept the 1st parameter of `java.util.concurrent.CompletableFuture`'s `completeOnTimeout()`, `getNow()` and `obtrudeValue()` functions as nullable ([#1001](https://github.com/spotbugs/spotbugs/issues/1001)).
+- Fixed the an analysis error when `FindReturnRef` was checking instructions corresponding to a CFG branch that was optimized away ([#3266](https://github.com/spotbugs/spotbugs/issues/3266))
+- Added execute file permission to files in the distribution archive ([#3274](https://github.com/spotbugs/spotbugs/issues/3274))
+- Fixed a stack overflow in  `MultipleInstantiationsOfSingletons` when a singleton initializer makes recursive calls ([#3280](https://github.com/spotbugs/spotbugs/issues/3280))
+- Fixed NPE in  `FindReturnRef` on inner class fields ([#3283](https://github.com/spotbugs/spotbugs/issues/3283))
+
+## 4.9.0 - 2025-01-15
 ### Added
 - Updated the `SuppressFBWarnings` annotation to support finer grained bug suppressions ([#3102](https://github.com/spotbugs/spotbugs/pull/3102))
 - SimpleDateFormat, DateTimeFormatter, FastDateFormat string check for bad combinations of flag formatting ([#637](https://github.com/spotbugs/spotbugs/issues/637))
@@ -58,6 +68,8 @@ Currently the versioning policy of this project follows [Semantic Versioning v2.
 - Rename shadowing fields ([#3221](https://github.com/spotbugs/spotbugs/pull/3221))
 - Combine catch blocks with the same body ([#3223](https://github.com/spotbugs/spotbugs/pull/3223))
 - Merge conditions of nested ifs ([#3231](https://github.com/spotbugs/spotbugs/pull/3231))
+- Use non deprecated 'getDottedClassName' instead of 'toDottedClassName'([#3251](https://github.com/spotbugs/spotbugs/pull/3251))
+- Use try with resources where possible ([#3253](https://github.com/spotbugs/spotbugs/pull/3253))
 
 ### Changed
 - Bump up Java version to 11
