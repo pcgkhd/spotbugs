@@ -34,8 +34,8 @@ Currently the versioning policy of this project follows [Semantic Versioning v2.
 - New bug type `CWO_CLOSED_WITHOUT_OPENED` for locks that might be released without even being acquired. (See [SEI CERT rule LCK08-J](https://wiki.sei.cmu.edu/confluence/display/java/LCK08-J.+Ensure+actively+held+locks+are+released+on+exceptional+conditions)) ([#2055](https://github.com/spotbugs/spotbugs/pull/2055))
   - Breaking change: changed values and new items in `ResourceValueFrame`.
 - Inline access method for method. ([#3481](https://github.com/spotbugs/spotbugs/issues/3481))
-- New detector `ModifyCollectionInEnhancedForLoop` and bug type is introduced:
-    - `MCE_MODIFY_COLLECTION_IN_ENHANCED_FOR_LOOP` is reported when a collection's elements are modified during an enhanced for loop (See [SEI CERT DCL02-J](https://wiki.sei.cmu.edu/confluence/display/java/DCL02-J.+Do+not+modify+the+collection%27s+elements+during+an+enhanced+for+statement)).
+- New detector `ModifyEnhancedForLoopVariable` and bug type is introduced:
+    - `MEV_ENHANCED_FOR_LOOP_VARIABLE` is reported when loop variable is modified in an enhanced for loop (See [SEI CERT DCL02-J](https://wiki.sei.cmu.edu/confluence/display/java/DCL02-J.+Do+not+modify+the+collection%27s+elements+during+an+enhanced+for+statement)).
 
 ## 4.9.3 - 2025-03-14
 ### Added
