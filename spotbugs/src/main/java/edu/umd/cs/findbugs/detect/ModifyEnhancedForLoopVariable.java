@@ -95,7 +95,9 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
         if (isStore(seen) && !loopVariableToInitPosition.isEmpty() && loopVariableToInitPosition.containsKey(getLocalVariable())) {
             BugInstance bug = new BugInstance(this, "MEV_ENHANCED_FOR_LOOP_VARIABLE", LOW_PRIORITY)
                     .addClassAndMethod(this)
-                    .addSourceLine(this);
+                    .addSourceLine(this)
+                    .addOptionalLocalVariable(this, stack.getStackItem(0));
+
             bugReporter.reportBug(bug);
             collectionLoopState = LoopState.INITIAL;
             arrayLoopState = LoopState.INITIAL;
