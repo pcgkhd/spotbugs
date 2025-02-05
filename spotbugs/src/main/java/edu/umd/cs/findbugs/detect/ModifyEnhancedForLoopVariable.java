@@ -20,6 +20,7 @@ package edu.umd.cs.findbugs.detect;
 
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
+import edu.umd.cs.findbugs.LocalVariableAnnotation;
 import edu.umd.cs.findbugs.ba.XMethod;
 import edu.umd.cs.findbugs.bcel.OpcodeStackDetector;
 import org.apache.bcel.Const;
@@ -92,11 +93,13 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
      */
     @Override
     public void sawOpcode(int seen) {
-        if (isStore(seen) && !loopVariableToInitPosition.isEmpty() && loopVariableToInitPosition.containsKey(getLocalVariable())) {
+        LocalVariable variable = getLocalVariable();  // Call getLocalVariable() once and store the result
+
+        if (isStore(seen) && !loopVariableToInitPosition.isEmpty() && variable != null && loopVariableToInitPosition.containsKey(variable)) {
             BugInstance bug = new BugInstance(this, "MEV_ENHANCED_FOR_LOOP_VARIABLE", LOW_PRIORITY)
                     .addClassAndMethod(this)
                     .addSourceLine(this)
-                    .addOptionalLocalVariable(this, stack.getStackItem(0));
+                    .add(new LocalVariableAnnotation(variable.getName(), variable.getIndex(), this.getPC()));
 
             bugReporter.reportBug(bug);
             collectionLoopState = LoopState.INITIAL;
