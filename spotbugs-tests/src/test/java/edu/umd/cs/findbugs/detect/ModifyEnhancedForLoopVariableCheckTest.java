@@ -14,17 +14,17 @@ public class ModifyEnhancedForLoopVariableCheckTest extends AbstractIntegrationT
         assertBugTypeCount(MEV_BUG_TYPE, 11);
 
         final String className = "BadEnhanceForLoopUsageCheckTest";
-        assertBugInMethodAtLine(MEV_BUG_TYPE, className, "modifyCollectionWithEnhancedForLoop", 16);
-        assertBugInMethodAtLine(MEV_BUG_TYPE, className, "modifyStringElement", 31);
-        assertBugInMethodAtLine(MEV_BUG_TYPE, className, "loopWithinLoop", 40);
-        assertBugInMethodAtLine(MEV_BUG_TYPE, className, "notEnhancedLoopWithinEnhancedLoops", 51);
-        assertBugInMethodAtLine(MEV_BUG_TYPE, className, "modifyOuterLoopVariable", 66);
-        assertBugInMethodAtLine(MEV_BUG_TYPE, className, "multipleEnhancedLoopVariableModification", 75);
-        assertBugInMethodAtLine(MEV_BUG_TYPE, className, "multipleEnhancedLoopVariableModification", 77);
-        assertBugInMethodAtLine(MEV_BUG_TYPE, className, "arrayEnhancedForLoop", 85);
-        assertBugInMethodAtLine(MEV_BUG_TYPE, className, "charArrayEnhancedForLoop", 93);
-        assertBugInMethodAtLine(MEV_BUG_TYPE, className, "mixedForLoopsWithEnhancedLoops", 105);
-        assertBugInMethodAtLine(MEV_BUG_TYPE, className, "mixedForLoopsWithEnhancedLoops", 107);
+        assertBugAtVar(MEV_BUG_TYPE, className, "modifyCollectionWithEnhancedForLoop", "i", 16);
+        assertBugAtVar(MEV_BUG_TYPE, className, "modifyStringElement", "name", 31);
+        assertBugAtVar(MEV_BUG_TYPE, className, "loopWithinLoop", "number", 40);
+        assertBugAtVar(MEV_BUG_TYPE, className, "notEnhancedLoopWithinEnhancedLoops", "number", 51);
+        assertBugAtVar(MEV_BUG_TYPE, className, "modifyOuterLoopVariable", "numbers", 66);
+        assertBugAtVar(MEV_BUG_TYPE, className, "multipleEnhancedLoopVariableModification", "number", 75);
+        assertBugAtVar(MEV_BUG_TYPE, className, "multipleEnhancedLoopVariableModification", "numbers", 77);
+        assertBugAtVar(MEV_BUG_TYPE, className, "arrayEnhancedForLoop", "number", 85);
+        assertBugAtVar(MEV_BUG_TYPE, className, "charArrayEnhancedForLoop", "character", 93);
+        assertBugAtVar(MEV_BUG_TYPE, className, "mixedForLoopsWithEnhancedLoops", "character", 105);
+        assertBugAtVar(MEV_BUG_TYPE, className, "mixedForLoopsWithEnhancedLoops", "number", 107);
     }
 
     @Test
