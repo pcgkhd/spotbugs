@@ -697,7 +697,7 @@
 
           <!-- Bug Categories -->
           <Detector class="edu.umd.cs.findbugs.detect.ModifyEnhancedForLoopVariable" speed="fast"
-                    reports="MEV_ENHANCED_FOR_LOOP_VARIABLE"/>
+                    reports="MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE"/>
     <!-- Bug Categories -->
           <BugCategory category="NOISE" hidden="true"/>
 
@@ -1351,5 +1351,5 @@
           <BugPattern abbrev="AT" type="AT_STALE_THREAD_WRITE_OF_PRIMITIVE" category="MT_CORRECTNESS" />
           <BugPattern abbrev="AT" type="AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE" category="MT_CORRECTNESS"/>
           <BugPattern abbrev="HSM" type="HSM_HIDING_METHOD" category="CORRECTNESS"/>
-          <BugPattern abbrev="MEV" type="MEV_ENHANCED_FOR_LOOP_VARIABLE" category="BAD_PRACTICE" />
+          <BugPattern abbrev="MEV" type="MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE" category="BAD_PRACTICE" />
 </FindbugsPlugin>

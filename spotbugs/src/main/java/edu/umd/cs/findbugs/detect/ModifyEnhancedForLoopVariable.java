@@ -33,12 +33,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
-    private static final int COLLECTION_ENHANCED_LOOP_BYTECODE_LENGTH = 8;
-    private static final int COLLECTION_ENHANCED_LOOP_VARIABLE_POSITION = 3;
-    private static final int ARRAY_ENHANCED_LOOP_BYTECODE_LENGTH = 14;
-    private static final int ARRAY_ENHANCED_LOOP_CONDITION_POSITION = 10;
-    private static final int ARRAY_ENHANCED_LOOP_VARIABLE_POSITION = 8;
-
     private enum LoopState {
         INITIAL, ITERATOR_CREATE, HAS_NEXT, NEXT_CALL, TYPE_CAST, VARIABLE_CREATE, CONDITION
     }
@@ -84,7 +78,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
     }
 
     /**
-     * https://docs.oracle.com/javase/1.5.0/docs/guide/language/foreach.html
+     * <a href="https://docs.oracle.com/javase/1.5.0/docs/guide/language/foreach.html">JSL foreach</a>
      *
      * There are two ways to create enhanced loop in Java.
      * One is by using Collection as the data source. In this occasion java creates an iterator, and iterates through the
@@ -95,8 +89,8 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
     public void sawOpcode(int seen) {
         LocalVariable variable = getLocalVariable();
 
-        if (isStore(seen) && !loopVariableToInitPosition.isEmpty() && variable != null && loopVariableToInitPosition.containsKey(variable)) {
-            BugInstance bug = new BugInstance(this, "MEV_ENHANCED_FOR_LOOP_VARIABLE", LOW_PRIORITY)
+        if (!loopVariableToInitPosition.isEmpty() && variable != null && loopVariableToInitPosition.containsKey(variable)) {
+            BugInstance bug = new BugInstance(this, "MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE", LOW_PRIORITY)
                     .addClassAndMethod(this)
                     .addSourceLine(this)
                     .add(new LocalVariableAnnotation(variable.getName(), variable.getIndex(), this.getPC()));
@@ -130,12 +124,16 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
             break;
 
         case ITERATOR_CREATE:
+            // Represents the number of bytecodes preceding the loading of the loop variable (for condition check),
+            // ensuring a continuous bytecode sequence. It marks the entry point of each iteration (where the goto jumps).
+            int forLoopVariableByteCodeNumbers = 3;
+
             // After the `iterator()` method call, wait for the `hasNext()` method call.
             // The `hasNext()` method call indicates the condition check of the loop.
             collectionOpcodeCounter++;
             if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Z", "hasNext", getXMethodOperand(), false)) {
                 collectionLoopState = LoopState.HAS_NEXT;
-            } else if (isLoad(seen) && collectionOpcodeCounter == COLLECTION_ENHANCED_LOOP_VARIABLE_POSITION) {
+            } else if (isLoad(seen) && collectionOpcodeCounter == forLoopVariableByteCodeNumbers) {
                 collectionLoopStart = isLoad(seen) ? getPC() : collectionLoopStart;
             } else if (!isStore(seen) && !isLoad(seen)) {
                 resetCollectionState();
@@ -166,10 +164,15 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
             break;
 
         case TYPE_CAST:
+            // Represents the number of bytecodes that precede the storage of the enhanced loop variable
+            // Ensures that the bytecode sequence before storing the loop variable in an enhanced loop is continuous.
+            int enhancedLoopByteCodeNumbers = 8;
+
             // After the `CHECKCAST` opcode, save the loop variable.
             // Later if this loop variable is modified, then bug should be reported.
-            if (isStore(seen) && collectionOpcodeCounter == COLLECTION_ENHANCED_LOOP_BYTECODE_LENGTH) {
-                loopVariableToInitPosition.put(getLocalVariable(), collectionLoopStart);
+            LocalVariable localVariable = getLocalVariable();
+            if (isStore(seen) && collectionOpcodeCounter == enhancedLoopByteCodeNumbers && localVariable != null) {
+                loopVariableToInitPosition.put(localVariable, collectionLoopStart);
             }
             resetCollectionState();
             break;
@@ -192,30 +195,42 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
             break;
 
         case VARIABLE_CREATE:
+            // Represents the number of bytecodes preceding the loading of the loop variable (for condition check),
+            // ensuring a continuous bytecode sequence. It marks the entry point of each iteration (where the goto jumps).
+            int forLoopVariableByteCodeNumbers = 8;
+
+            // Represents the number of bytecodes preceding the condition check, ensuring a continuous bytecode sequence.
+            int conditionCheckPosition = 10;
+
             // After the array reference is loaded, track the initialization of the loop variables.
             // This includes loading the array length, initializing the loop variable, and checking the loop condition.
             arrayOpcodeCounter++;
-            if (seen == Const.IF_ICMPGE && arrayOpcodeCounter == ARRAY_ENHANCED_LOOP_CONDITION_POSITION) {
+            if (seen == Const.IF_ICMPGE && arrayOpcodeCounter == conditionCheckPosition) {
                 // The `IF_ICMPGE` opcode checks if the loop variable is greater than or equal to the array length.
                 // This indicates the loop condition check.
                 arrayLoopState = LoopState.CONDITION;
-            } else if (isLoad(seen) && arrayOpcodeCounter == ARRAY_ENHANCED_LOOP_VARIABLE_POSITION) {
+            } else if (isLoad(seen) && arrayOpcodeCounter == forLoopVariableByteCodeNumbers) {
                 // If we see a `load` opcode at the expected step, store the starting point of the loop.
                 arrayLoopStart = isLoad(seen) ? getPC() : collectionLoopStart;
             } else if ((!isStore(seen) && !isLoad(seen) && seen != Const.ARRAYLENGTH && seen != Const.ICONST_0)
-                    || arrayOpcodeCounter >= ARRAY_ENHANCED_LOOP_CONDITION_POSITION) {
+                    || arrayOpcodeCounter >= conditionCheckPosition) {
                 resetArrayState();
             }
             break;
 
         case CONDITION:
+            // Represents the number of bytecodes that precede the storage of the enhanced loop variable
+            // Ensures that the bytecode sequence before storing the loop variable in an enhanced loop is continuous.
+            int arrayLoopByteCodeNumbers = 14;
+
             // After the loop condition check, enhanced loop stores an array element into a variable, using the loop variable as the index
             // Later if this variable is modified, then bug should be reported.
             arrayOpcodeCounter++;
-            if (isStore(seen) && arrayOpcodeCounter == ARRAY_ENHANCED_LOOP_BYTECODE_LENGTH) {
-                loopVariableToInitPosition.put(getLocalVariable(), arrayLoopStart);
+            LocalVariable localVariable = getLocalVariable();
+            if (isStore(seen) && arrayOpcodeCounter == arrayLoopByteCodeNumbers && localVariable != null) {
+                loopVariableToInitPosition.put(localVariable, arrayLoopStart);
                 resetArrayState();
-            } else if (!isLoad(seen) || arrayOpcodeCounter >= ARRAY_ENHANCED_LOOP_BYTECODE_LENGTH) {
+            } else if (!isLoad(seen) || arrayOpcodeCounter >= arrayLoopByteCodeNumbers) {
                 resetArrayState();
             }
             break;
