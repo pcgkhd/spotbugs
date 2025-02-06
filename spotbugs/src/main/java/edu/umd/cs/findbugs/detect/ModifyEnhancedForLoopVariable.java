@@ -93,7 +93,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
      */
     @Override
     public void sawOpcode(int seen) {
-        LocalVariable variable = getLocalVariable();  // Call getLocalVariable() once and store the result
+        LocalVariable variable = getLocalVariable();
 
         if (isStore(seen) && !loopVariableToInitPosition.isEmpty() && variable != null && loopVariableToInitPosition.containsKey(variable)) {
             BugInstance bug = new BugInstance(this, "MEV_ENHANCED_FOR_LOOP_VARIABLE", LOW_PRIORITY)
