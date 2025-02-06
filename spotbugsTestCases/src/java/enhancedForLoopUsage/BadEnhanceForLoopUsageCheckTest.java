@@ -108,4 +108,15 @@ public class BadEnhanceForLoopUsageCheckTest {
             }
         }
     }
+
+    void modifyOuterEnhancedLoopVariable() {
+        List<Integer> outers = List.of(1, 2, 3);
+        List<Integer> inners = List.of(1, 2, 3);
+
+        for (Integer outer : outers) {
+            for (Integer inner : inners) {
+                outer = 2;
+            }
+        }
+    }
 }

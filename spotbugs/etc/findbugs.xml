@@ -698,8 +698,8 @@
                     reports="AT_NONATOMIC_64BIT_PRIMITIVE,AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE,AT_STALE_THREAD_WRITE_OF_PRIMITIVE"/>
           <Detector class="edu.umd.cs.findbugs.detect.FindHiddenMethod" speed="fast"
                     reports="HSM_HIDING_METHOD"/>
-    <Detector class="edu.umd.cs.findbugs.detect.ModifyEnhancedForLoopVariable" speed="fast"
-              reports="MEV_ENHANCED_FOR_LOOP_VARIABLE"/>
+          <Detector class="edu.umd.cs.findbugs.detect.ModifyEnhancedForLoopVariable" speed="fast"
+                    reports="MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE"/>
 
           <!-- Bug Categories -->
           <BugCategory category="NOISE" hidden="true"/>
@@ -1338,5 +1338,5 @@
           <BugPattern abbrev="US" type="US_USELESS_SUPPRESSION_ON_METHOD" category="STYLE"/>
           <BugPattern abbrev="US" type="US_USELESS_SUPPRESSION_ON_METHOD_PARAMETER" category="STYLE"/>
           <BugPattern abbrev="US" type="US_USELESS_SUPPRESSION_ON_PACKAGE" category="STYLE"/>
-          <BugPattern abbrev="MEV" type="MEV_ENHANCED_FOR_LOOP_VARIABLE" category="BAD_PRACTICE" />
+          <BugPattern abbrev="MEV" type="MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE" category="BAD_PRACTICE" />
 </FindbugsPlugin>
