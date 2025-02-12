@@ -37,23 +37,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
         INITIAL, ITERATOR_CREATE, HAS_NEXT, NEXT_CALL, TYPE_CAST, VARIABLE_CREATE, CONDITION
     }
 
-    private static final Set<Short> STORE_OPCODES = Set.of(
-            Const.ISTORE, Const.LSTORE, Const.FSTORE, Const.DSTORE, Const.ASTORE,
-            Const.ISTORE_0, Const.ISTORE_1, Const.ISTORE_2, Const.ISTORE_3,
-            Const.LSTORE_0, Const.LSTORE_1, Const.LSTORE_2, Const.LSTORE_3,
-            Const.FSTORE_0, Const.FSTORE_1, Const.FSTORE_2, Const.FSTORE_3,
-            Const.DSTORE_0, Const.DSTORE_1, Const.DSTORE_2, Const.DSTORE_3,
-            Const.ASTORE_0, Const.ASTORE_1, Const.ASTORE_2, Const.ASTORE_3,
-            Const.IASTORE, Const.LASTORE, Const.FASTORE, Const.DASTORE,
-            Const.AASTORE, Const.BASTORE, Const.CASTORE, Const.SASTORE);
-
-    private static final Set<Short> LOAD_OPCODES = Set.of(
-            Const.ILOAD, Const.LLOAD, Const.FLOAD, Const.DLOAD, Const.ALOAD,
-            Const.ILOAD_0, Const.ILOAD_1, Const.ILOAD_2, Const.ILOAD_3,
-            Const.LLOAD_0, Const.LLOAD_1, Const.LLOAD_2, Const.LLOAD_3,
-            Const.FLOAD_0, Const.FLOAD_1, Const.FLOAD_2, Const.FLOAD_3,
-            Const.DLOAD_0, Const.DLOAD_1, Const.DLOAD_2, Const.DLOAD_3,
-            Const.ALOAD_0, Const.ALOAD_1, Const.ALOAD_2, Const.ALOAD_3,
+    private static final Set<Short> LOAD_PRIMITIVE_FROM_ARRAY = Set.of(
             Const.IALOAD, Const.LALOAD, Const.FALOAD, Const.DALOAD,
             Const.AALOAD, Const.BALOAD, Const.CALOAD, Const.SALOAD);
 
@@ -103,8 +87,8 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
         if (seen == Const.GOTO && !loopVariableToInitPosition.isEmpty()) {
             int gotoTarget = getBranchTarget();
             loopVariableToInitPosition.values().remove(gotoTarget);
-            collectionLoopState = LoopState.INITIAL;
-            arrayLoopState = LoopState.INITIAL;
+            resetCollectionState();
+            resetArrayState();
         }
 
         checkCollectionEnhancedLoop(seen);
@@ -133,9 +117,9 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
             collectionOpcodeCounter++;
             if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Z", "hasNext", getXMethodOperand(), false)) {
                 collectionLoopState = LoopState.HAS_NEXT;
-            } else if (isLoad(seen) && collectionOpcodeCounter == forLoopVariableByteCodeNumbers) {
-                collectionLoopStart = isLoad(seen) ? getPC() : collectionLoopStart;
-            } else if (!isStore(seen) && !isLoad(seen)) {
+            } else if (isRegisterLoad() && collectionOpcodeCounter == forLoopVariableByteCodeNumbers) {
+                collectionLoopStart = isRegisterLoad() ? getPC() : collectionLoopStart;
+            } else if (!isRegisterStore() && !isRegisterLoad()) {
                 resetCollectionState();
             }
             break;
@@ -147,7 +131,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
             collectionOpcodeCounter++;
             if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Ljava/lang/Object;", "next", getXMethodOperand(), false)) {
                 collectionLoopState = LoopState.NEXT_CALL;
-            } else if (seen != Const.IFEQ && !isLoad(seen)) {
+            } else if (seen != Const.IFEQ && !isRegisterLoad()) {
                 resetCollectionState();
             }
             break;
@@ -171,7 +155,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
             // After the `CHECKCAST` opcode, save the loop variable.
             // Later if this loop variable is modified, then bug should be reported.
             LocalVariable localVariable = getLocalVariable();
-            if (isStore(seen) && collectionOpcodeCounter == enhancedLoopByteCodeNumbers && localVariable != null) {
+            if (isRegisterStore() && collectionOpcodeCounter == enhancedLoopByteCodeNumbers && localVariable != null) {
                 loopVariableToInitPosition.put(localVariable, collectionLoopStart);
             }
             resetCollectionState();
@@ -188,7 +172,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
         case INITIAL:
             // Initial state: waiting for a `load` opcode to start tracking the array loop.
             // A `load` opcode indicates that the array reference is being loaded onto the stack.
-            if (isLoad(seen)) {
+            if (isRegisterLoad()) {
                 arrayOpcodeCounter++;
                 arrayLoopState = LoopState.VARIABLE_CREATE;
             }
@@ -209,10 +193,10 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
                 // The `IF_ICMPGE` opcode checks if the loop variable is greater than or equal to the array length.
                 // This indicates the loop condition check.
                 arrayLoopState = LoopState.CONDITION;
-            } else if (isLoad(seen) && arrayOpcodeCounter == forLoopVariableByteCodeNumbers) {
+            } else if (isRegisterLoad() && arrayOpcodeCounter == forLoopVariableByteCodeNumbers) {
                 // If we see a `load` opcode at the expected step, store the starting point of the loop.
-                arrayLoopStart = isLoad(seen) ? getPC() : collectionLoopStart;
-            } else if ((!isStore(seen) && !isLoad(seen) && seen != Const.ARRAYLENGTH && seen != Const.ICONST_0)
+                arrayLoopStart = isRegisterLoad() ? getPC() : collectionLoopStart;
+            } else if ((!isRegisterStore() && !isRegisterLoad() && seen != Const.ARRAYLENGTH && seen != Const.ICONST_0)
                     || arrayOpcodeCounter >= conditionCheckPosition) {
                 resetArrayState();
             }
@@ -227,10 +211,11 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
             // Later if this variable is modified, then bug should be reported.
             arrayOpcodeCounter++;
             LocalVariable localVariable = getLocalVariable();
-            if (isStore(seen) && arrayOpcodeCounter == arrayLoopByteCodeNumbers && localVariable != null) {
+            if (isRegisterStore() && arrayOpcodeCounter == arrayLoopByteCodeNumbers && localVariable != null) {
                 loopVariableToInitPosition.put(localVariable, arrayLoopStart);
                 resetArrayState();
-            } else if (!isLoad(seen) || arrayOpcodeCounter >= arrayLoopByteCodeNumbers) {
+            } else if ((!isRegisterLoad() && !LOAD_PRIMITIVE_FROM_ARRAY.contains((short) seen))
+                    || arrayOpcodeCounter >= arrayLoopByteCodeNumbers) {
                 resetArrayState();
             }
             break;
@@ -239,14 +224,6 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
             resetArrayState();
             break;
         }
-    }
-
-    private boolean isStore(int opcode) {
-        return STORE_OPCODES.contains((short) opcode);
-    }
-
-    private boolean isLoad(int opcode) {
-        return LOAD_OPCODES.contains((short) opcode);
     }
 
     private static boolean isMethodMatching(String expectedSignature, String expectedMethodName, XMethod methodToCheck,
