@@ -38,8 +38,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
     }
 
     private static final Set<Short> LOAD_PRIMITIVE_FROM_ARRAY = Set.of(
-            Const.IALOAD, Const.LALOAD, Const.FALOAD, Const.DALOAD, Const.BALOAD, Const.CALOAD, Const.SALOAD
-    );
+            Const.IALOAD, Const.LALOAD, Const.FALOAD, Const.DALOAD, Const.BALOAD, Const.CALOAD, Const.SALOAD);
 
     private final BugReporter bugReporter;
 
