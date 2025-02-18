@@ -9826,7 +9826,7 @@ Using floating-point variables should not be used as loop counters, as they are 
     <LongDescription>Suppressing annotation {1} on the package {0} is unnecessary</LongDescription>
   <BugPattern type="MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE">
     <ShortDescription>Modifying the loop variable in an enhanced for loop</ShortDescription>
-    <LongDescription>In class {0}, in the method {1} at line {2}, the loop variable {3} is modified in an enhanced for loop.</LongDescription>
+    <LongDescription>The enhanced for loop at line {2} modifies the loop variable, which can lead to a ConcurrentModificationException or unexpected behavior.</LongDescription>
     <Details>
       <![CDATA[<p>
       Suppressing annotation <code>&amp;SuppressFBWarnings</code> should be removed from the source code as soon as they are no more needed.
