@@ -8799,7 +8799,7 @@ object explicitly.</p>
 
   <BugPattern type="MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR">
     <ShortDescription>An overridable method is called from a constructor</ShortDescription>
-    <LongDescription>Overridable method {2} is called from constructor {1}.</LongDescription>
+    <LongDescription>Overridable method {2.nameAndSignature} is called from constructor {1}.</LongDescription>
     <Details>
       <![CDATA[<p>
       Calling an overridable method during in a constructor may result in the use of uninitialized data. It may also
@@ -8813,7 +8813,7 @@ object explicitly.</p>
 
   <BugPattern type="MC_OVERRIDABLE_METHOD_CALL_IN_CLONE">
     <ShortDescription>An overridable method is called from the clone() method.</ShortDescription>
-    <LongDescription>Overridable method {2} is called from method clone() in class {0}.</LongDescription>
+    <LongDescription>Overridable method {2.nameAndSignature} is called from method clone() in class {0}.</LongDescription>
     <Details>
       <![CDATA[<p>
       Calling overridable methods from the clone() method is insecure because a subclass could override the method,
@@ -8827,7 +8827,7 @@ object explicitly.</p>
   </BugPattern>
   <BugPattern type="MC_OVERRIDABLE_METHOD_CALL_IN_READ_OBJECT">
     <ShortDescription>An overridable method is called from the readObject method.</ShortDescription>
-    <LongDescription>Overridable method {2} is called from readObject.</LongDescription>
+    <LongDescription>Overridable method {2.nameAndSignature} is called from readObject.</LongDescription>
     <Details>
       <![CDATA[<p>
       The readObject() method must not call any overridable methods. Invoking overridable methods from the readObject()
@@ -9397,6 +9397,69 @@ Using floating-point variables should not be used as loop counters, as they are 
     ]]>
     </Details>
   </BugPattern>
+
+  <BugPattern type="US_USELESS_SUPPRESSION_ON_CLASS">
+    <ShortDescription>Useless suppression on a class</ShortDescription>
+    <LongDescription>Suppressing annotation on the class {0} is unnecessary</LongDescription>
+    <Details>
+      <![CDATA[<p>
+      Suppressing annotations <code>&amp;SuppressFBWarnings</code> should be removed from the source code as soon as they are no more needed.
+      Leaving them may result in accidental warnings suppression.
+      </p>]]>
+    </Details>
+  </BugPattern>
+
+  <BugPattern type="US_USELESS_SUPPRESSION_ON_FIELD">
+    <ShortDescription>Useless suppression on a field</ShortDescription>
+    <LongDescription>Suppressing annotation on the field {1} is unnecessary</LongDescription>
+    <Details>
+      <![CDATA[<p>
+      Suppressing annotations <code>&amp;SuppressFBWarnings</code> should be removed from the source code as soon as they are no more needed.
+      Leaving them may result in accidental warnings suppression.
+      The annotation was probably added to suppress a warning raised by SpotBugs, but now SpotBugs does not report the bug anymore. Either
+      the bug was solved or SpotBugs was updated, and the bug is no longer raised by that code.
+      </p>]]>
+    </Details>
+  </BugPattern>
+
+  <BugPattern type="US_USELESS_SUPPRESSION_ON_METHOD">
+    <ShortDescription>Useless suppression on a method</ShortDescription>
+    <LongDescription>Suppressing annotation on the method {1} is unnecessary</LongDescription>
+    <Details>
+      <![CDATA[<p>
+      Suppressing annotations <code>&amp;SuppressFBWarnings</code> should be removed from the source code as soon as they are no more needed.
+      Leaving them may result in accidental warnings suppression.
+      The annotation was probably added to suppress a warning raised by SpotBugs, but now SpotBugs does not report the bug anymore. Either
+      the bug was solved or SpotBugs was updated, and the bug is no longer raised by that code.
+      </p>]]>
+    </Details>
+  </BugPattern>
+
+  <BugPattern type="US_USELESS_SUPPRESSION_ON_METHOD_PARAMETER">
+    <ShortDescription>Useless suppression on a method parameter</ShortDescription>
+    <LongDescription>Suppressing annotation on the parameter {2} of the method {1} is unnecessary</LongDescription>
+    <Details>
+      <![CDATA[<p>
+      Suppressing annotations <code>&amp;SuppressFBWarnings</code> should be removed from the source code as soon as they are no more needed.
+      Leaving them may result in accidental warnings suppression.
+      The annotation was probably added to suppress a warning raised by SpotBugs, but now SpotBugs does not report the bug anymore. Either
+      the bug was solved or SpotBugs was updated, and the bug is no longer raised by that code.
+      </p>]]>
+    </Details>
+  </BugPattern>
+
+  <BugPattern type="US_USELESS_SUPPRESSION_ON_PACKAGE">
+    <ShortDescription>Useless suppression on a package</ShortDescription>
+    <LongDescription>Suppressing annotation on the package {0} is unnecessary</LongDescription>
+    <Details>
+      <![CDATA[<p>
+      Suppressing annotation <code>&amp;SuppressFBWarnings</code> should be removed from the source code as soon as they are no more needed.
+      Leaving them may result in accidental warnings suppression.
+      The annotation was probably added to suppress a warning raised by SpotBugs, but now SpotBugs does not report the bug anymore. Either
+      the bug was solved or SpotBugs was updated, and the bug is no longer raised by that code.
+      </p>]]>
+    </Details>
+  </BugPattern>
   <!--
   **********************************************************************
    BugCodes
@@ -9559,6 +9622,7 @@ Using floating-point variables should not be used as loop counters, as they are 
   <BugCode abbrev="PI">Do not reuse public identifiers from Java Standard Library</BugCode>
   <BugCode abbrev="ENV">Environment variable is used instead of the corresponding Java property</BugCode>
   <BugCode abbrev="HSM">Avoid method hiding</BugCode>
+  <BugCode abbrev="US">Useless suppression</BugCode>
   <BugCode abbrev="MEV">Modified loop variable in enhanced for loop</BugCode>
 </MessageCollection>
 

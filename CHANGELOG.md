@@ -10,11 +10,22 @@ Currently the versioning policy of this project follows [Semantic Versioning v2.
 - New detector `ModifyEnhancedForLoopVariable` and bug type is introduced:
     - `MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE` is reported when loop variable is modified in an enhanced for loop (See [SEI CERT DCL02-J](https://wiki.sei.cmu.edu/confluence/display/java/DCL02-J.+Do+not+modify+the+collection%27s+elements+during+an+enhanced+for+statement)).
 
+## 4.9.2 - 2025-03-01
+### Added
+
+- Reporting useless `@SuppressFBWarnings` annotations ([#641](https://github.com/spotbugs/spotbugs/issues/641))
+
 ### Fixed
 - Fixed html bug descriptions for AT_STALE_THREAD_WRITE_OF_PRIMITIVE and AT_NONATOMIC_64BIT_PRIMITIVE ([#3303](https://github.com/spotbugs/spotbugs/issues/3303))
 - Fixed an `HSM_HIDING_METHOD` false positive when ECJ generates a synthetic method for an enum switch ([#3305](https://github.com/spotbugs/spotbugs/issues/3305))
 - Fix `AT_UNSAFE_RESOURCE_ACCESS_IN_THREAD` false negatives, detector depending on method order.
 - Fix `THROWS_METHOD_THROWS_CLAUSE_THROWABLE` reported in a method calling `MethodHandle.invokeExact` due to its polymorphic signature ([#3309](https://github.com/spotbugs/spotbugs/issues/3309))
+- Fix `AT_STALE_THREAD_WRITE_OF_PRIMITIVE` false positive in inner class ([#3310](https://github.com/spotbugs/spotbugs/issues/3310)).
+- Fix `AT_STALE_THREAD_WRITE_OF_PRIMITIVE` false positive for ECJ compiled enum switches ([#3316](https://github.com/spotbugs/spotbugs/issues/3316))
+- Fix `RC_REF_COMPARISON` false positive with Lombok With annotation ([#3319](https://github.com/spotbugs/spotbugs/pull/3319))
+- Avoid calling File.getCanonicalPath twice to improve performance ([#3325](https://github.com/spotbugs/spotbugs/pull/3325))
+- Fix `MC_OVERRIDABLE_METHOD_CALL_IN_CONSTRUCTOR` and `MC_OVERRIDABLE_METHOD_CALL_IN_CLONE` false positive when the overridable method is outside the class ([#3328](https://github.com/spotbugs/spotbugs/issues/3328)).
+- Fix NullPointerException thrown from `ThrowingExceptions` detector ([#3337](https://github.com/spotbugs/spotbugs/pull/3337)).
 
 ### Removed
 - Removed the `TLW_TWO_LOCK_NOTIFY`, `LI_LAZY_INIT_INSTANCE`, `BRSA_BAD_RESULTSET_ACCESS`, `BC_NULL_INSTANCEOF`, `NP_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR` and `RCN_REDUNDANT_CHECKED_NULL_COMPARISON` deprecated bug patterns.
