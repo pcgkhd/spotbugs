@@ -11,7 +11,7 @@ class ModifyEnhancedForLoopVariableCheckTest extends AbstractIntegrationTest {
     void testBadEnhancedForLoopUsageChecks() {
         performAnalysis("enhancedForLoopUsage/BadEnhanceForLoopUsageCheckTest.class");
 
-        assertBugTypeCount(MEV_BUG_TYPE, 12);
+        assertBugTypeCount(MEV_BUG_TYPE, 14);
 
         final String className = "BadEnhanceForLoopUsageCheckTest";
         assertBugAtVar(MEV_BUG_TYPE, className, "modifyCollectionWithEnhancedForLoop", "i", 16);
@@ -26,6 +26,8 @@ class ModifyEnhancedForLoopVariableCheckTest extends AbstractIntegrationTest {
         assertBugAtVar(MEV_BUG_TYPE, className, "mixedForLoopsWithEnhancedLoops", "character", 105);
         assertBugAtVar(MEV_BUG_TYPE, className, "mixedForLoopsWithEnhancedLoops", "number", 107);
         assertBugAtVar(MEV_BUG_TYPE, className, "modifyOuterEnhancedLoopVariable", "outer", 118);
+        assertBugAtVar(MEV_BUG_TYPE, className, "arrayEnhancedLoopWithConversionsAndMethodCalls", "d", 126);
+        assertBugAtVar(MEV_BUG_TYPE, className, "falsePositive", "num", 135); // This should not report bug, as it modifies the variable on purpose
     }
 
     @Test

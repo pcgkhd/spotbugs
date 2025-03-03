@@ -119,4 +119,25 @@ public class BadEnhanceForLoopUsageCheckTest {
             }
         }
     }
+
+    void arrayEnhancedLoopWithConversionsAndMethodCalls() {
+        int[] nums = {1, 2, 3};
+        for (double d : getArray(nums)) {
+            d = 0.0;
+        }
+    }
+
+    void falsePositive() {
+        int[] nums = {1, 2, 3};
+        List<Integer> newList = new ArrayList<>();
+
+        for (int num : nums) {
+            num = num % 2 == 0 ? num * 2 : num;
+            newList.add(num);
+        }
+    }
+
+    int[] getArray(int[] array) {
+        return array;
+    }
 }
