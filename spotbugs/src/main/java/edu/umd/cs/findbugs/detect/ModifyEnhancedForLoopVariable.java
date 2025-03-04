@@ -33,10 +33,15 @@ import java.util.Map;
 
 public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
     private enum LoopState {
-        INITIAL, ITERATOR_CREATE, HAS_NEXT, NEXT_CALL, TYPE_CAST, CONDITION, ARRAY_STORE, ARRAY_SIZE_STORE, LOOP_VARIABLE_STORE
+        INITIAL, ITERATOR_CREATE,
+        HAS_NEXT, ARRAY_CONDITION,
+        ARRAY_STORE, ARRAY_SIZE_STORE,
+        LOOP_VARIABLE_STORE, ITERATOR_STORE,
+        COLLECTION_CONDITION
     }
 
     private int arrayLoopVariable;
+    private int collectionIterator;
 
     private final BugReporter bugReporter;
 
@@ -45,7 +50,6 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
     private final Map<LocalVariable, Integer> loopVariableToConditionPosition = new HashMap<>();
     private int collectionLoopStart;
     private int arrayLoopConditionStart;
-    private int collectionOpcodeCounter;
 
     public ModifyEnhancedForLoopVariable(BugReporter bugReporter) {
         this.bugReporter = bugReporter;
@@ -83,8 +87,8 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
         if (seen == Const.GOTO && !loopVariableToConditionPosition.isEmpty()) {
             int gotoTarget = getBranchTarget();
             loopVariableToConditionPosition.values().remove(gotoTarget);
-            resetCollectionState();
-            resetArrayState();
+            collectionLoopState = LoopState.INITIAL;
+            arrayLoopState = LoopState.INITIAL;
         }
 
         checkCollectionEnhancedLoop(seen);
@@ -98,67 +102,53 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
             // because it can be any of Collection subclasses
             // The `iterator()` method call indicates the start of an enhanced `for` loop.
             if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Ljava/util/Iterator;", "iterator", getXMethodOperand(), true)) {
-                collectionOpcodeCounter++;
                 collectionLoopState = LoopState.ITERATOR_CREATE;
             }
             break;
 
         case ITERATOR_CREATE:
-            // Represents the number of bytecodes preceding the loading of the loop variable (for condition check),
-            // ensuring a continuous bytecode sequence. It marks the entry point of each iteration (where the goto jumps).
-            int forLoopVariableByteCodeNumbers = 3;
+            // Synthetic variable which has no name in LVT. Storing the iterator of the Collection
+            if (isRegisterStore() && getLocalVariable() == null) {
+                collectionLoopState = LoopState.ITERATOR_STORE;
+                collectionIterator = getRegisterOperand();
+            } else {
+                collectionLoopState = LoopState.INITIAL;
+            }
+            break;
 
-            // After the `iterator()` method call, wait for the `hasNext()` method call.
-            // The `hasNext()` method call indicates the condition check of the loop.
-            collectionOpcodeCounter++;
+        case ITERATOR_STORE:
+            // Loading iterator to call the hasNext method is the start of the condition. Every iteration jumps back here (GOTO)
+            if (isRegisterLoad() && collectionIterator == getRegisterOperand()) {
+                collectionLoopStart = getPC();
+                collectionLoopState = LoopState.COLLECTION_CONDITION;
+            } else {
+                collectionLoopState = LoopState.INITIAL;
+            }
+            break;
+
+        case COLLECTION_CONDITION:
             if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Z", "hasNext", getXMethodOperand(), false)) {
                 collectionLoopState = LoopState.HAS_NEXT;
-            } else if (isRegisterLoad() && collectionOpcodeCounter == forLoopVariableByteCodeNumbers) {
-                collectionLoopStart = isRegisterLoad() ? getPC() : collectionLoopStart;
-            } else if (!isRegisterStore() && !isRegisterLoad()) {
-                resetCollectionState();
+            } else {
+                collectionLoopState = LoopState.INITIAL;
             }
             break;
 
         case HAS_NEXT:
-            // IFEQ opcode checks if the 'hasNext()' method returns with true value
-            // After the `hasNext()` method call, wait for the `next()` method call.
-            // The `next()` method call indicates the start of the loop body.
-            collectionOpcodeCounter++;
-            if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Ljava/lang/Object;", "next", getXMethodOperand(), false)) {
-                collectionLoopState = LoopState.NEXT_CALL;
-            } else if (seen != Const.IFEQ && !isRegisterLoad()) {
-                resetCollectionState();
+            // Storing the next value of the iterator (the actual loop variable)
+            if (isRegisterStore()) {
+                LocalVariable localVariable = getLocalVariable();
+                if (localVariable != null &&
+                        // Checking both previous and before prev to be the "next" call, because there can be a typecast in between
+                        (getPrevOpcode(1) == Const.INVOKEINTERFACE || getPrevOpcode(2) == Const.INVOKEINTERFACE)) {
+                    loopVariableToConditionPosition.put(localVariable, collectionLoopStart);
+                }
+                collectionLoopState = LoopState.INITIAL;
             }
-            break;
-
-        case NEXT_CALL:
-            // After the `next()` method call, wait for the `CHECKCAST` opcode.
-            // The `CHECKCAST` opcode indicates that we are checking the type of the loop variable.
-            collectionOpcodeCounter++;
-            if (seen == Const.CHECKCAST) {
-                collectionLoopState = LoopState.TYPE_CAST;
-            } else {
-                resetCollectionState();
-            }
-            break;
-
-        case TYPE_CAST:
-            // Represents the number of bytecodes that precede the storage of the enhanced loop variable
-            // Ensures that the bytecode sequence before storing the loop variable in an enhanced loop is continuous.
-            int enhancedLoopByteCodeNumbers = 8;
-
-            // After the `CHECKCAST` opcode, save the loop variable.
-            // Later if this loop variable is modified, then bug should be reported.
-            LocalVariable localVariable = getLocalVariable();
-            if (isRegisterStore() && collectionOpcodeCounter == enhancedLoopByteCodeNumbers && localVariable != null) {
-                loopVariableToConditionPosition.put(localVariable, collectionLoopStart);
-            }
-            resetCollectionState();
             break;
 
         default:
-            resetCollectionState();
+            collectionLoopState = LoopState.INITIAL;
             break;
         }
     }
@@ -178,7 +168,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
                 if (getLocalVariable() == null && getPrevOpcode(1) == Const.ARRAYLENGTH) {
                     arrayLoopState = LoopState.ARRAY_SIZE_STORE;
                 } else {
-                    resetArrayState();
+                    arrayLoopState = LoopState.INITIAL;
                 }
             }
             break;
@@ -190,7 +180,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
                     arrayLoopVariable = getRegisterOperand();
                     arrayLoopState = LoopState.LOOP_VARIABLE_STORE;
                 } else {
-                    resetArrayState();
+                    arrayLoopState = LoopState.INITIAL;
                 }
             }
             break;
@@ -201,20 +191,20 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
                 arrayLoopConditionStart = getPC();
             }
             if (seen == Const.IF_ICMPGE) {
-                arrayLoopState = LoopState.CONDITION;
+                arrayLoopState = LoopState.ARRAY_CONDITION;
             }
 
-        case CONDITION:
+        case ARRAY_CONDITION:
             // After the condition it stores the actual loop variable
             LocalVariable variable = getLocalVariable();
             if (isRegisterStore() && variable != null) {
                 loopVariableToConditionPosition.put(variable, arrayLoopConditionStart);
-                resetArrayState();
+                arrayLoopState = LoopState.INITIAL;
             }
             break;
 
         default:
-            resetArrayState();
+            arrayLoopState = LoopState.INITIAL;
             break;
         }
     }
@@ -225,15 +215,6 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
                 && expectedSignature.equals(methodToCheck.getSignature())
                 && expectedMethodName.equals(methodToCheck.getName())
                 && (skipIteratorCheck || "java.util.Iterator".equals(methodToCheck.getClassName()));
-    }
-
-    private void resetCollectionState() {
-        collectionOpcodeCounter = 0;
-        collectionLoopState = LoopState.INITIAL;
-    }
-
-    private void resetArrayState() {
-        arrayLoopState = LoopState.INITIAL;
     }
 
     private LocalVariable getLocalVariable() {

@@ -127,17 +127,35 @@ public class BadEnhanceForLoopUsageCheckTest {
         }
     }
 
+    void collectionEnhancedLoopWithMethodCall() {
+        List<Integer> numbers = List.of(1,2,3);
+
+        for (Object item : getCollection(numbers)) {
+            item = 10;
+        }
+    }
+
     void falsePositive() {
         int[] nums = {1, 2, 3};
         List<Integer> newList = new ArrayList<>();
+        List<Integer> doubleList = new ArrayList<>();
 
         for (int num : nums) {
             num = num % 2 == 0 ? num * 2 : num;
             newList.add(num);
         }
+
+        for (Integer num : newList) {
+            num = num * 2;
+            doubleList.add(num);
+        }
     }
 
     int[] getArray(int[] array) {
         return array;
+    }
+
+    List<Integer> getCollection(List<Integer> collection) {
+        return collection;
     }
 }
