@@ -139,7 +139,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
             if (isRegisterStore()) {
                 LocalVariable localVariable = getLocalVariable();
                 if (localVariable != null &&
-                        // Checking both previous and before prev to be the "next" call, because there can be a typecast in between
+                // Checking both previous and before prev to be the "next" call, because there can be a typecast in between
                         (getPrevOpcode(1) == Const.INVOKEINTERFACE || getPrevOpcode(2) == Const.INVOKEINTERFACE)) {
                     loopVariableToConditionPosition.put(localVariable, collectionLoopStart);
                 }
