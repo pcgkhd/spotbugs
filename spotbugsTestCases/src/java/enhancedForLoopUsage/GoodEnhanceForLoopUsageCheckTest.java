@@ -5,14 +5,14 @@ import java.util.List;
 
 public class GoodEnhanceForLoopUsageCheckTest {
     void modifyCopyElementOfCollection() {
-        List<Integer> list = Arrays.asList(new Integer[]{13, 14, 15});
+        List<Integer> list = List.of(13, 14, 15);
         boolean first = true;
 
         for (final Integer i: list) {
             Integer item = i;
             if (first) {
                 first = false;
-                item = new Integer(99);
+                item = 99;
             }
             System.out.println(" New item: " + item);
         }
@@ -43,6 +43,19 @@ public class GoodEnhanceForLoopUsageCheckTest {
         for (List<Integer> sublist : nestedList) {
             sublist.set(0, sublist.get(0) + 10);
         }
+    }
+
+    void arrayIndexForLoop() {
+        char[] characters = {'a', 'b', 'c'};
+        int size = characters.length;
+        for (int i = 0; i < size; i++) {
+            int character = characters[i];
+            character = 'd';
+        }
+    }
+
+    void collectionIteratorLoop() {
+
     }
 }
 
