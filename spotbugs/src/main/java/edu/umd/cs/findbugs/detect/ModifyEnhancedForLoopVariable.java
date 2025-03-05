@@ -32,22 +32,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
+
     private enum LoopState {
-        INITIAL, ITERATOR_CREATE,
-        HAS_NEXT, ARRAY_CONDITION,
-        ARRAY_STORE, ARRAY_SIZE_STORE,
-        LOOP_VARIABLE_STORE, ITERATOR_STORE,
-        COLLECTION_CONDITION
+        INITIAL, ITERATOR_CREATE, HAS_NEXT, ARRAY_CONDITION, ARRAY_STORE, ARRAY_SIZE_STORE, LOOP_VARIABLE_STORE, ITERATOR_STORE, COLLECTION_CONDITION
     }
 
-    private int arrayLoopVariable;
-    private int collectionIterator;
-
     private final BugReporter bugReporter;
+    private final Map<LocalVariable, Integer> loopVariableToConditionPosition = new HashMap<>();
 
     private LoopState collectionLoopState = LoopState.INITIAL;
     private LoopState arrayLoopState = LoopState.INITIAL;
-    private final Map<LocalVariable, Integer> loopVariableToConditionPosition = new HashMap<>();
+
+    private int arrayLoopVariable;
+    private int collectionIterator;
     private int collectionLoopStart;
     private int arrayLoopConditionStart;
 
@@ -73,7 +70,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
     public void sawOpcode(int seen) {
         LocalVariable variable = getLocalVariable();
 
-        if (!loopVariableToConditionPosition.isEmpty() && variable != null && loopVariableToConditionPosition.containsKey(variable)) {
+        if (variable != null && loopVariableToConditionPosition.containsKey(variable)) {
             BugInstance bug = new BugInstance(this, "MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE", LOW_PRIORITY)
                     .addClassAndMethod(this)
                     .addSourceLine(this)
@@ -127,6 +124,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
             break;
 
         case COLLECTION_CONDITION:
+            // The condition of the loop should be the iterators hasNext() method
             if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Z", "hasNext", getXMethodOperand(), false)) {
                 collectionLoopState = LoopState.HAS_NEXT;
             } else {
@@ -197,7 +195,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
         case ARRAY_CONDITION:
             // After the condition it stores the actual loop variable
             LocalVariable variable = getLocalVariable();
-            if (isRegisterStore() && variable != null) {
+            if (variable != null) {
                 loopVariableToConditionPosition.put(variable, arrayLoopConditionStart);
                 arrayLoopState = LoopState.INITIAL;
             }
