@@ -1,6 +1,7 @@
 package enhancedForLoopUsage;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 public class GoodEnhanceForLoopUsageCheckTest {
@@ -55,7 +56,12 @@ public class GoodEnhanceForLoopUsageCheckTest {
     }
 
     void collectionIteratorLoop() {
+        List<String> names = Arrays.asList("Bob", "Marie", "Anne");
+        for (Iterator i = names.iterator(); i.hasNext();) {
+            String name = (String) i.next();
 
+            name = "Adam";
+        }
     }
 }
 
