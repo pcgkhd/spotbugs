@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class BadEnhanceForLoopUsageCheckTest {
+public class BadFindEnhancedForLoopVariableModificationTest {
     void modifyCollectionWithEnhancedForLoop() {
         List<Integer> list = Arrays.asList(new Integer[]{13, 14, 15});
         boolean first = true;

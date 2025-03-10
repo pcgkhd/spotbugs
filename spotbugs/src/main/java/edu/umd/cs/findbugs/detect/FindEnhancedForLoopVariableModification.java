@@ -31,7 +31,7 @@ import org.apache.bcel.classfile.LocalVariableTable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
+public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector {
 
     private enum LoopState {
         INITIAL, ITERATOR_CREATE, HAS_NEXT, ARRAY_CONDITION, ARRAY_STORE, ARRAY_SIZE_STORE, LOOP_VARIABLE_STORE, ITERATOR_STORE, COLLECTION_CONDITION
@@ -48,7 +48,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
     private int collectionLoopStart;
     private int arrayLoopConditionStart;
 
-    public ModifyEnhancedForLoopVariable(BugReporter bugReporter) {
+    public FindEnhancedForLoopVariableModification(BugReporter bugReporter) {
         this.bugReporter = bugReporter;
     }
 
@@ -191,6 +191,7 @@ public class ModifyEnhancedForLoopVariable extends OpcodeStackDetector {
             if (seen == Const.IF_ICMPGE) {
                 arrayLoopState = LoopState.ARRAY_CONDITION;
             }
+            break;
 
         case ARRAY_CONDITION:
             // After the condition it stores the actual loop variable

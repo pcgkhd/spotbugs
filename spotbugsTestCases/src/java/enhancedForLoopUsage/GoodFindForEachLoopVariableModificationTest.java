@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-public class GoodEnhanceForLoopUsageCheckTest {
+public class GoodFindEnhancedForLoopVariableModificationTest {
     void modifyCopyElementOfCollection() {
         List<Integer> list = List.of(13, 14, 15);
         boolean first = true;

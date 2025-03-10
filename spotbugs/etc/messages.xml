@@ -1892,6 +1892,15 @@ factory pattern to create these objects.</p>
       ]]>
     </Details>
   </Detector>
+  <Detector class="edu.umd.cs.findbugs.detect.FindEnhancedForLoopVariableModification">
+      <Details>
+          <![CDATA[
+          <p>Detects modifications of a collection’s elements during an enhanced for loop, which can lead to
+           unexpected behavior as the loop variable is a local copy and not a reference to the original element.
+          </p>
+          ]]>
+      </Details>
+  </Detector>
 
   <!--
   **********************************************************************
@@ -9821,7 +9830,7 @@ Using floating-point variables should not be used as loop counters, as they are 
     </Details>
   </BugPattern>
   <BugPattern type="MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE">
-      <ShortDescription>Modifying the loop variable in an enhanced for loop</ShortDescription>
+      <ShortDescription>Modifying the loop variable in a foreach loop</ShortDescription>
       <LongDescription>The enhanced for loop at line {2} modifies the loop variable, which can lead to a ConcurrentModificationException or unexpected behavior.</LongDescription>
       <Details>
         <![CDATA[
@@ -9829,8 +9838,9 @@ Using floating-point variables should not be used as loop counters, as they are 
         This occurs because the enhanced for loop relies on an Iterator when iterating over collections, and modifying the iterator does not actually change the corresponding element in the collection.
         Similarly, when iterating over arrays, modifying the loop variable does not affect the actual array element, leading to inconsistent or unexpected behavior.</p>
 
-        <p>For collections, this can lead to unpredictable and hard-to-read code. In worse cases, attempting to skip an iteration or modify the iterator may throw a ConcurrentModificationException. For arrays, modifying the loop variable does not modify the underlying array, as the loop variable is merely a copy of the array element.</p>
+        <p>For collections, this can lead to unpredictable and hard-to-read code. On the other hand, attempting to skip an iteration or modify the iterator may throw a ConcurrentModificationException. For arrays, modifying the loop variable does not modify the underlying array, as the loop variable is merely a copy of the array element.</p>
 
+        <p>To solve this issue, do one of the following:</p>
         <ul>
           <li><b>Declare the loop variable as final:</b> By marking the loop variable as final, you prevent accidental modifications to the variable during iteration. This makes the code predictable and easy to understand.</li>
           <li>Avoid modifying the elements of the collection or array during iteration. If you need to update the elements, consider using a traditional for loop with an index or an explicit Iterator.</li>

@@ -698,7 +698,7 @@
                     reports="AT_NONATOMIC_64BIT_PRIMITIVE,AT_NONATOMIC_OPERATIONS_ON_SHARED_VARIABLE,AT_STALE_THREAD_WRITE_OF_PRIMITIVE"/>
           <Detector class="edu.umd.cs.findbugs.detect.FindHiddenMethod" speed="fast"
                     reports="HSM_HIDING_METHOD"/>
-          <Detector class="edu.umd.cs.findbugs.detect.ModifyEnhancedForLoopVariable" speed="fast"
+          <Detector class="edu.umd.cs.findbugs.detect.FindEnhancedForLoopVariableModification" speed="fast"
                     reports="MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE"/>
 
           <!-- Bug Categories -->

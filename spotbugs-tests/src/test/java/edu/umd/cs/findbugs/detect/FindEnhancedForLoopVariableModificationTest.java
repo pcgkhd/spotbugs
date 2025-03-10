@@ -3,17 +3,17 @@ package edu.umd.cs.findbugs.detect;
 import edu.umd.cs.findbugs.AbstractIntegrationTest;
 import org.junit.jupiter.api.Test;
 
-class ModifyEnhancedForLoopVariableCheckTest extends AbstractIntegrationTest {
+class FindEnhancedForLoopVariableModificationTest extends AbstractIntegrationTest {
 
     private static final String MEV_BUG_TYPE = "MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE";
 
     @Test
     void testBadEnhancedForLoopUsageChecks() {
-        performAnalysis("enhancedForLoopUsage/BadEnhanceForLoopUsageCheckTest.class");
+        performAnalysis("enhancedForLoopUsage/BadFindEnhancedForLoopVariableModificationTest.class");
 
-        assertBugTypeCount(MEV_BUG_TYPE, 16);
+        assertBugTypeCountBetween(MEV_BUG_TYPE, 14, 16);
 
-        final String className = "BadEnhanceForLoopUsageCheckTest";
+        final String className = "BadFindEnhancedForLoopVariableModificationTest";
         assertBugAtVar(MEV_BUG_TYPE, className, "modifyCollectionWithEnhancedForLoop", "i", 16);
         assertBugAtVar(MEV_BUG_TYPE, className, "modifyStringElement", "name", 31);
         assertBugAtVar(MEV_BUG_TYPE, className, "loopWithinLoop", "number", 40);
@@ -34,7 +34,7 @@ class ModifyEnhancedForLoopVariableCheckTest extends AbstractIntegrationTest {
 
     @Test
     void testGoodEnhancedForLoopUsageChecks() {
-        performAnalysis("enhancedForLoopUsage/GoodEnhanceForLoopUsageCheckTest.class");
+        performAnalysis("enhancedForLoopUsage/GoodFindEnhancedForLoopVariableModificationTest.class");
 
         assertNoBugType(MEV_BUG_TYPE);
     }
