@@ -9820,22 +9820,26 @@ Using floating-point variables should not be used as loop counters, as they are 
       </p>]]>
     </Details>
   </BugPattern>
-
-  <BugPattern type="US_USELESS_SUPPRESSION_ON_PACKAGE">
-    <ShortDescription>Useless suppression on a package</ShortDescription>
-    <LongDescription>Suppressing annotation {1} on the package {0} is unnecessary</LongDescription>
   <BugPattern type="MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE">
-    <ShortDescription>Modifying the loop variable in an enhanced for loop</ShortDescription>
-    <LongDescription>The enhanced for loop at line {2} modifies the loop variable, which can lead to a ConcurrentModificationException or unexpected behavior.</LongDescription>
-    <Details>
-      <![CDATA[<p>
-      Suppressing annotation <code>&amp;SuppressFBWarnings</code> should be removed from the source code as soon as they are no more needed.
-      Leaving them may result in accidental warnings suppression.
-      The annotation was probably added to suppress a warning raised by SpotBugs, but now SpotBugs does not report the bug anymore. Either
-      the bug was solved or SpotBugs was updated, and the bug is no longer raised by that code.
-      The unnecessary annotation is not reported when the package's <code>package-info</code> is annotated with an <code>&amp;Generated</code> annotation with retention CLASS or RUNTIME.
-      </p>]]>
-    </Details>
+      <ShortDescription>Modifying the loop variable in an enhanced for loop</ShortDescription>
+      <LongDescription>The enhanced for loop at line {2} modifies the loop variable, which can lead to a ConcurrentModificationException or unexpected behavior.</LongDescription>
+      <Details>
+        <![CDATA[
+        <p>Modifying a collection's element while iterating over it using an enhanced for loop can result in a ConcurrentModificationException or unexpected behavior.
+        This occurs because the enhanced for loop relies on an Iterator when iterating over collections, and modifying the iterator does not actually change the corresponding element in the collection.
+        Similarly, when iterating over arrays, modifying the loop variable does not affect the actual array element, leading to inconsistent or unexpected behavior.</p>
+
+        <p>For collections, this can lead to unpredictable and hard-to-read code. In worse cases, attempting to skip an iteration or modify the iterator may throw a ConcurrentModificationException. For arrays, modifying the loop variable does not modify the underlying array, as the loop variable is merely a copy of the array element.</p>
+
+        <ul>
+          <li><b>Declare the loop variable as final:</b> By marking the loop variable as final, you prevent accidental modifications to the variable during iteration. This makes the code predictable and easy to understand.</li>
+          <li>Avoid modifying the elements of the collection or array during iteration. If you need to update the elements, consider using a traditional for loop with an index or an explicit Iterator.</li>
+          <li>If you need to replace elements in a collection, consider creating a new collection with the updated elements instead of modifying the original collection during iteration.</li>
+        </ul>
+
+        <p>For more details, see <a href="https://wiki.sei.cmu.edu/confluence/display/java/DCL02-J.+Do+not+modify+the+collection+while+iterating+over+it">SEI CERT rule DCL02-J</a>.</p>
+        ]]>
+      </Details>
   </BugPattern>
   <!--
   **********************************************************************
