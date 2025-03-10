@@ -19,17 +19,13 @@
 
 package edu.umd.cs.findbugs.detect;
 
+import edu.umd.cs.findbugs.*;
+import edu.umd.cs.findbugs.ba.ch.Subtypes2;
 import org.apache.bcel.Const;
 import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.Code;
 
-import edu.umd.cs.findbugs.BugAccumulator;
-import edu.umd.cs.findbugs.BugInstance;
-import edu.umd.cs.findbugs.BugReporter;
-import edu.umd.cs.findbugs.BytecodeScanningDetector;
-import edu.umd.cs.findbugs.SourceLineAnnotation;
-import edu.umd.cs.findbugs.StatelessDetector;
-import edu.umd.cs.findbugs.ba.ch.Subtypes2;
+import java.util.List;
 
 public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implements StatelessDetector {
 
@@ -48,6 +44,11 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
     private int locationOfCall;
 
     private String lastCallClass = null, lastCallMethod = null, lastCallSig = null;
+
+    private final List<Short> intComparisons = List.of(
+            Const.IF_ICMPEQ, Const.IF_ICMPNE,
+            Const.IF_ICMPLT, Const.IF_ICMPGE,
+            Const.IF_ICMPGT, Const.IF_ICMPLE);
 
     public ReadReturnShouldBeChecked(BugReporter bugReporter) {
         this.accumulator = new BugAccumulator(bugReporter);
@@ -139,6 +140,14 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
             recentCallToAvailable = sawAvailable > 0 && !wasBufferedInputStream;
             return;
 
+        }
+
+        if (sawRead && seen == Const.ICONST_M1 && intComparisons.contains((short) getNextOpcode())) {
+            accumulator.accumulateBug(
+                    new BugInstance(this, "ANF_ARRAY_MIGHT_NOT_BE_FILLED", HIGH_PRIORITY)
+                            .addClassAndMethod(this)
+                            .addCalledMethod(lastCallClass, lastCallMethod, lastCallSig, false),
+                    SourceLineAnnotation.fromVisitedInstruction(getClassContext(), this, locationOfCall));
         }
 
         if ((seen == Const.POP) || (seen == Const.POP2)) {

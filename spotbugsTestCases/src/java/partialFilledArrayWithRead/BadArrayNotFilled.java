@@ -5,7 +5,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class BadPartialFilledArrayWithRead {
+public class BadArrayNotFilled {
 
     String readBytes(InputStream in) throws IOException {
         byte[] data = new byte[1024];
