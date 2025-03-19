@@ -9831,7 +9831,7 @@ Using floating-point variables should not be used as loop counters, as they are 
   </BugPattern>
   <BugPattern type="MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE">
       <ShortDescription>Modifying the loop variable in a foreach loop</ShortDescription>
-      <LongDescription>The enhanced for loop at line {2} modifies the loop variable, which can lead to a ConcurrentModificationException or unexpected behavior.</LongDescription>
+      <LongDescription>Modifying the loop variable at line {2} in an enhanced for loop does not affect the underlying collection or array, potentially causing unexpected behavior or ConcurrentModificationExceptions.</LongDescription>
       <Details>
         <![CDATA[
         <p>Modifying a collection's element while iterating over it using an enhanced for loop can result in a ConcurrentModificationException or unexpected behavior.

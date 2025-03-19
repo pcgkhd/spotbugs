@@ -28,13 +28,13 @@ class FindEnhancedForLoopVariableModificationTest extends AbstractIntegrationTes
         assertBugAtVar(MEV_BUG_TYPE, className, "modifyOuterEnhancedLoopVariable", "outer", 118);
         assertBugAtVar(MEV_BUG_TYPE, className, "arrayEnhancedLoopWithConversionsAndMethodCalls", "d", 126);
         assertBugAtVar(MEV_BUG_TYPE, className, "collectionEnhancedLoopWithMethodCall", "item", 134);
-        assertBugAtVar(MEV_BUG_TYPE, className, "falsePositive", "num", 144); // This should not report bug, as it modifies the variable on purpose
-        assertBugAtVar(MEV_BUG_TYPE, className, "falsePositive", "num", 149); // This should not report bug, as it modifies the variable on purpose
+        assertBugAtVar(MEV_BUG_TYPE, className, "unclearIntentWithForeach", "num", 144); // No bug, but the intent of modifying the variable might be unclear
+        assertBugAtVar(MEV_BUG_TYPE, className, "unclearIntentWithForeach", "num", 149); // No bug, but the intent of modifying the variable might be unclear
     }
 
     @Test
     void testGoodEnhancedForLoopUsageChecks() {
-        performAnalysis("enhancedForLoopUsage/GoodFindEnhancedForLoopVariableModificationTest.class");
+        performAnalysis("enhancedForLoopUsage/GoodFindEnhancedForLoopVariableModificationTest.class", "enhancedForLoopUsage/Person.class");
 
         assertNoBugType(MEV_BUG_TYPE);
     }

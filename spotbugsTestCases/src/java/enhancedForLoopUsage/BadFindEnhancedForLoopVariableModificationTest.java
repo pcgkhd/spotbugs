@@ -135,7 +135,7 @@ public class BadFindEnhancedForLoopVariableModificationTest {
         }
     }
 
-    void falsePositive() {
+    void unclearIntentWithForeach() {
         int[] nums = {1, 2, 3};
         List<Integer> newList = new ArrayList<>();
         List<Integer> doubleList = new ArrayList<>();

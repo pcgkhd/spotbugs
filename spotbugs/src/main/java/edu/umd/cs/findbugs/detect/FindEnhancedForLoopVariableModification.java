@@ -21,7 +21,6 @@ package edu.umd.cs.findbugs.detect;
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.LocalVariableAnnotation;
-import edu.umd.cs.findbugs.ba.XMethod;
 import edu.umd.cs.findbugs.bcel.OpcodeStackDetector;
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.JavaClass;
@@ -33,18 +32,22 @@ import java.util.Map;
 
 public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector {
 
-    private enum LoopState {
-        INITIAL, ITERATOR_CREATE, HAS_NEXT, ARRAY_CONDITION, ARRAY_STORE, ARRAY_SIZE_STORE, LOOP_VARIABLE_STORE, ITERATOR_STORE, COLLECTION_CONDITION
+    private enum CollectionLoopState {
+        INITIAL, ITERATOR_CREATE, ITERATOR_STORE, COLLECTION_CONDITION, HAS_NEXT
+    }
+
+    private enum ArrayLoopState {
+        INITIAL, ARRAY_STORE, ARRAY_SIZE_STORE, LOOP_VARIABLE_STORE, ARRAY_CONDITION
     }
 
     private final BugReporter bugReporter;
     private final Map<LocalVariable, Integer> loopVariableToConditionPosition = new HashMap<>();
 
-    private LoopState collectionLoopState = LoopState.INITIAL;
-    private LoopState arrayLoopState = LoopState.INITIAL;
+    private CollectionLoopState collectionLoopState = CollectionLoopState.INITIAL;
+    private ArrayLoopState arrayLoopState = ArrayLoopState.INITIAL;
 
-    private int arrayLoopVariable;
-    private int collectionIterator;
+    private int arrayLoopVariableRegister;
+    private int collectionIteratorRegister;
     private int collectionLoopStart;
     private int arrayLoopConditionStart;
 
@@ -54,8 +57,10 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
 
     @Override
     public void visitAfter(JavaClass obj) {
-        collectionLoopState = LoopState.INITIAL;
-        arrayLoopState = LoopState.INITIAL;
+        collectionLoopState = CollectionLoopState.INITIAL;
+        arrayLoopState = ArrayLoopState.INITIAL;
+        collectionLoopStart = -1;
+        arrayLoopConditionStart = -1;
     }
 
     /**
@@ -68,7 +73,7 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
      */
     @Override
     public void sawOpcode(int seen) {
-        LocalVariable variable = getLocalVariable();
+        LocalVariable variable =  isRegisterStore() ? getLocalVariable() : null;
 
         if (variable != null && loopVariableToConditionPosition.containsKey(variable)) {
             BugInstance bug = new BugInstance(this, "MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE", LOW_PRIORITY)
@@ -77,15 +82,15 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
                     .add(new LocalVariableAnnotation(variable.getName(), variable.getIndex(), this.getPC()));
 
             bugReporter.reportBug(bug);
-            collectionLoopState = LoopState.INITIAL;
-            arrayLoopState = LoopState.INITIAL;
+            collectionLoopState = CollectionLoopState.INITIAL;
+            arrayLoopState = ArrayLoopState.INITIAL;
         }
 
         if (seen == Const.GOTO && !loopVariableToConditionPosition.isEmpty()) {
             int gotoTarget = getBranchTarget();
             loopVariableToConditionPosition.values().remove(gotoTarget);
-            collectionLoopState = LoopState.INITIAL;
-            arrayLoopState = LoopState.INITIAL;
+            collectionLoopState = CollectionLoopState.INITIAL;
+            arrayLoopState = ArrayLoopState.INITIAL;
         }
 
         checkCollectionEnhancedLoop(seen);
@@ -98,55 +103,63 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
             // Initial state: waiting for the `iterator()` method call. The class that contains the 'iterator()' method is not checked,
             // because it can be any of Collection subclasses
             // The `iterator()` method call indicates the start of an enhanced `for` loop.
-            if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Ljava/util/Iterator;", "iterator", getXMethodOperand(), true)) {
-                collectionLoopState = LoopState.ITERATOR_CREATE;
+            if (seen == Const.INVOKEINTERFACE && getXMethodOperand() != null &&
+                    "()Ljava/util/Iterator;".equals(getXMethodOperand().getSignature()) && "iterator".equals(getXMethodOperand().getName())) {
+                collectionLoopState = CollectionLoopState.ITERATOR_CREATE;
             }
             break;
 
         case ITERATOR_CREATE:
             // Synthetic variable which has no name in LVT. Storing the iterator of the Collection
             if (isRegisterStore() && getLocalVariable() == null) {
-                collectionLoopState = LoopState.ITERATOR_STORE;
-                collectionIterator = getRegisterOperand();
+                collectionLoopState = CollectionLoopState.ITERATOR_STORE;
+                collectionIteratorRegister = getRegisterOperand();
             } else {
-                collectionLoopState = LoopState.INITIAL;
+                collectionLoopState = CollectionLoopState.INITIAL;
             }
             break;
 
         case ITERATOR_STORE:
             // Loading iterator to call the hasNext method is the start of the condition. Every iteration jumps back here (GOTO)
-            if (isRegisterLoad() && collectionIterator == getRegisterOperand()) {
+            if (isRegisterLoad() && collectionIteratorRegister == getRegisterOperand()) {
                 collectionLoopStart = getPC();
-                collectionLoopState = LoopState.COLLECTION_CONDITION;
+                collectionLoopState = CollectionLoopState.COLLECTION_CONDITION;
             } else {
-                collectionLoopState = LoopState.INITIAL;
+                collectionLoopState = CollectionLoopState.INITIAL;
             }
             break;
 
         case COLLECTION_CONDITION:
             // The condition of the loop should be the iterators hasNext() method
-            if (seen == Const.INVOKEINTERFACE && isMethodMatching("()Z", "hasNext", getXMethodOperand(), false)) {
-                collectionLoopState = LoopState.HAS_NEXT;
+            if (seen == Const.INVOKEINTERFACE && getXMethodOperand() != null && "()Z".equals(getXMethodOperand().getSignature())
+                    && "hasNext".equals(getXMethodOperand().getName()) && "java.util.Iterator".equals(getXMethodOperand().getClassName())) {
+                collectionLoopState = CollectionLoopState.HAS_NEXT;
             } else {
-                collectionLoopState = LoopState.INITIAL;
+                collectionLoopState = CollectionLoopState.INITIAL;
             }
             break;
 
         case HAS_NEXT:
+            // Check if the next element of the iterator is used
+            if (seen == Const.INVOKEINTERFACE && getXMethodOperand() != null && "()Ljava/lang/Object;".equals(getXMethodOperand().getSignature())
+                    && "next".equals(getXMethodOperand().getName()) && "java.util.Iterator".equals(getXMethodOperand().getClassName())
+                    && (getNextOpcode() == Const.POP || getNextOpcode() == Const.POP2)) {
+                collectionLoopState = CollectionLoopState.INITIAL;
+            }
+
             // Storing the next value of the iterator (the actual loop variable)
             if (isRegisterStore()) {
                 LocalVariable localVariable = getLocalVariable();
-                if (localVariable != null &&
-                // Checking both previous and before prev to be the "next" call, because there can be a typecast in between
-                        (getPrevOpcode(1) == Const.INVOKEINTERFACE || getPrevOpcode(2) == Const.INVOKEINTERFACE)) {
+                if (localVariable != null) {
                     loopVariableToConditionPosition.put(localVariable, collectionLoopStart);
                 }
-                collectionLoopState = LoopState.INITIAL;
+                collectionLoopState = CollectionLoopState.INITIAL;
+                collectionLoopStart = -1;
             }
             break;
 
         default:
-            collectionLoopState = LoopState.INITIAL;
+            collectionLoopState = CollectionLoopState.INITIAL;
             break;
         }
     }
@@ -156,7 +169,7 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
         case INITIAL:
             // Synthetic variable which has no name in LVT. Might be the start of enhanced loop storing the array.
             if (isRegisterStore() && getLocalVariable() == null) {
-                arrayLoopState = LoopState.ARRAY_STORE;
+                arrayLoopState = ArrayLoopState.ARRAY_STORE;
             }
             break;
 
@@ -164,9 +177,9 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
             // Synthetic variable which has no name in LVT. Storing the size of the array, stored earlier
             if (isRegisterStore()) {
                 if (getLocalVariable() == null && getPrevOpcode(1) == Const.ARRAYLENGTH) {
-                    arrayLoopState = LoopState.ARRAY_SIZE_STORE;
+                    arrayLoopState = ArrayLoopState.ARRAY_SIZE_STORE;
                 } else {
-                    arrayLoopState = LoopState.INITIAL;
+                    arrayLoopState = ArrayLoopState.INITIAL;
                 }
             }
             break;
@@ -175,49 +188,42 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
             // Synthetic variable which has no name in LVT. Storing the hidden iterator.
             if (isRegisterStore()) {
                 if (getLocalVariable() == null && getPrevOpcode(1) == Const.ICONST_0) {
-                    arrayLoopVariable = getRegisterOperand();
-                    arrayLoopState = LoopState.LOOP_VARIABLE_STORE;
+                    arrayLoopVariableRegister = getRegisterOperand();
+                    arrayLoopState = ArrayLoopState.LOOP_VARIABLE_STORE;
                 } else {
-                    arrayLoopState = LoopState.INITIAL;
+                    arrayLoopState = ArrayLoopState.INITIAL;
                 }
             }
             break;
 
         case LOOP_VARIABLE_STORE:
             // The start of the condition, compares the iterator and the array size. The end of the loop (GOTO) jumps back here.
-            if (isRegisterLoad() && arrayLoopVariable == getRegisterOperand()) {
+            if (isRegisterLoad() && arrayLoopVariableRegister == getRegisterOperand()) {
                 arrayLoopConditionStart = getPC();
             }
             if (seen == Const.IF_ICMPGE) {
-                arrayLoopState = LoopState.ARRAY_CONDITION;
+                arrayLoopState = ArrayLoopState.ARRAY_CONDITION;
             }
             break;
 
         case ARRAY_CONDITION:
             // After the condition it stores the actual loop variable
-            LocalVariable variable = getLocalVariable();
+            LocalVariable variable =  isRegisterStore() ? getLocalVariable() : null;
             if (variable != null) {
                 loopVariableToConditionPosition.put(variable, arrayLoopConditionStart);
-                arrayLoopState = LoopState.INITIAL;
+                arrayLoopState = ArrayLoopState.INITIAL;
+                arrayLoopConditionStart = -1;
             }
             break;
 
         default:
-            arrayLoopState = LoopState.INITIAL;
+            arrayLoopState = ArrayLoopState.INITIAL;
             break;
         }
     }
 
-    private static boolean isMethodMatching(String expectedSignature, String expectedMethodName, XMethod methodToCheck,
-            boolean skipIteratorCheck) {
-        return methodToCheck != null
-                && expectedSignature.equals(methodToCheck.getSignature())
-                && expectedMethodName.equals(methodToCheck.getName())
-                && (skipIteratorCheck || "java.util.Iterator".equals(methodToCheck.getClassName()));
-    }
-
     private LocalVariable getLocalVariable() {
         LocalVariableTable lvt = getMethod().getLocalVariableTable();
-        return (lvt != null && isRegisterStore()) ? lvt.getLocalVariable(getRegisterOperand(), getNextPC()) : null;
+        return (lvt != null) ? lvt.getLocalVariable(getRegisterOperand(), getNextPC()) : null;
     }
 }
