@@ -41,6 +41,7 @@ Currently the versioning policy of this project follows [Semantic Versioning v2.
 
 ### Fixed
 - Do not report `US_USELESS_SUPPRESSION_ON_METHOD` on synthetic methods ([#3351](https://github.com/spotbugs/spotbugs/issues/3351))
+- Report `RR_NOT_CHECKED` on comparing return value with -1. Array may not be filled.
 
 ## 4.9.2 - 2025-03-01
 ### Added
