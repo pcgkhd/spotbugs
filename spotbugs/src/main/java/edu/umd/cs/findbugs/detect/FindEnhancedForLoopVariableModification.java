@@ -168,7 +168,8 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
         switch (arrayLoopState) {
         case INITIAL:
             // Synthetic variable which has no name in LVT. Might be the start of enhanced loop storing the array.
-            if (isRegisterStore() && getLocalVariable() == null) {
+            if (isRegisterStore() && getLocalVariable() == null && (seen == Const.ASTORE || seen == Const.ASTORE_0 ||
+                    seen == Const.ASTORE_1 || seen == Const.ASTORE_2 || seen == Const.ASTORE_3)) {
                 arrayLoopState = ArrayLoopState.ARRAY_STORE;
             }
             break;
