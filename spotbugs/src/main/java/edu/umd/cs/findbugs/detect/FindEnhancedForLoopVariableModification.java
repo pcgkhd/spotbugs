@@ -73,7 +73,7 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
      */
     @Override
     public void sawOpcode(int seen) {
-        LocalVariable variable =  isRegisterStore() ? getLocalVariable() : null;
+        LocalVariable variable = isRegisterStore() ? getLocalVariable() : null;
 
         if (variable != null && loopVariableToConditionPosition.containsKey(variable)) {
             BugInstance bug = new BugInstance(this, "MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE", LOW_PRIORITY)
@@ -208,7 +208,7 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
 
         case ARRAY_CONDITION:
             // After the condition it stores the actual loop variable
-            LocalVariable variable =  isRegisterStore() ? getLocalVariable() : null;
+            LocalVariable variable = isRegisterStore() ? getLocalVariable() : null;
             if (variable != null) {
                 loopVariableToConditionPosition.put(variable, arrayLoopConditionStart);
                 arrayLoopState = ArrayLoopState.INITIAL;
