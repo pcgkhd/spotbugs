@@ -1,6 +1,7 @@
 package partialFilledArrayWithRead;
 
 
+import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,5 +23,14 @@ public class BadReadReturnShouldBeCheckedTest {
             throw new EOFException();
         }
         return new String(data, "UTF-8");
+    }
+
+    public String readFromBufferedReader(BufferedReader bufferedReader) throws IOException {
+        char[] data = new char[1024];
+
+        if (bufferedReader.read(data) == -1) {
+            throw new EOFException();
+        }
+        return new String(data);
     }
 }

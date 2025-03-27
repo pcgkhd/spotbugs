@@ -144,7 +144,7 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
 
         if (sawRead && seen == Const.ICONST_M1 && intComparisons.contains((short) getNextOpcode())) {
             accumulator.accumulateBug(
-                    new BugInstance(this, "RR_NOT_CHECKED", recentCallToAvailable ? LOW_PRIORITY : NORMAL_PRIORITY)
+                    new BugInstance(this, "NCR_NOT_CHECKED_READ", recentCallToAvailable ? LOW_PRIORITY : NORMAL_PRIORITY)
                             .addClassAndMethod(this).addCalledMethod(lastCallClass, lastCallMethod, lastCallSig, false),
                     SourceLineAnnotation.fromVisitedInstruction(getClassContext(), this, locationOfCall));
         }

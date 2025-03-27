@@ -38,10 +38,10 @@ Currently the versioning policy of this project follows [Semantic Versioning v2.
 ## 4.9.3 - 2025-03-14
 ### Added
 - Introduced `UselessSuppressionDetector` to report the useless annotations instead of `NoteSuppressedWarnings` ([#3348](https://github.com/spotbugs/spotbugs/issues/3348))
+- New bug type is introduced: `NCR_NOT_CHECKED_READ`. Improper validation of the return value from the read() method in InputStream and Reader classes may result in an array not being fully filled.
 
 ### Fixed
 - Do not report `US_USELESS_SUPPRESSION_ON_METHOD` on synthetic methods ([#3351](https://github.com/spotbugs/spotbugs/issues/3351))
-- Report `RR_NOT_CHECKED` on comparing return value with -1. Array may not be filled.
 
 ## 4.9.2 - 2025-03-01
 ### Added
