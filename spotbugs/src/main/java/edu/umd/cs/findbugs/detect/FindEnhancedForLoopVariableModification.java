@@ -46,8 +46,8 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
     private CollectionLoopState collectionLoopState = CollectionLoopState.INITIAL;
     private ArrayLoopState arrayLoopState = ArrayLoopState.INITIAL;
 
-    private int arrayLoopVariableRegister;
-    private int collectionIteratorRegister;
+    private int loopIndexRegisterOperand;
+    private int iteratorRegisterOperand;
     private int collectionLoopStart;
     private int arrayLoopConditionStart;
 
@@ -113,7 +113,7 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
             // Synthetic variable which has no name in LVT. Storing the iterator of the Collection
             if (isRegisterStore() && getLocalVariable() == null) {
                 collectionLoopState = CollectionLoopState.ITERATOR_STORE;
-                collectionIteratorRegister = getRegisterOperand();
+                iteratorRegisterOperand = getRegisterOperand();
             } else {
                 collectionLoopState = CollectionLoopState.INITIAL;
             }
@@ -121,7 +121,7 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
 
         case ITERATOR_STORE:
             // Loading iterator to call the hasNext method is the start of the condition. Every iteration jumps back here (GOTO)
-            if (isRegisterLoad() && collectionIteratorRegister == getRegisterOperand()) {
+            if (isRegisterLoad() && iteratorRegisterOperand == getRegisterOperand()) {
                 collectionLoopStart = getPC();
                 collectionLoopState = CollectionLoopState.COLLECTION_CONDITION;
             } else {
@@ -189,7 +189,7 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
             // Synthetic variable which has no name in LVT. Storing the hidden iterator.
             if (isRegisterStore()) {
                 if (getLocalVariable() == null && getPrevOpcode(1) == Const.ICONST_0) {
-                    arrayLoopVariableRegister = getRegisterOperand();
+                    loopIndexRegisterOperand = getRegisterOperand();
                     arrayLoopState = ArrayLoopState.LOOP_VARIABLE_STORE;
                 } else {
                     arrayLoopState = ArrayLoopState.INITIAL;
@@ -199,7 +199,7 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
 
         case LOOP_VARIABLE_STORE:
             // The start of the condition, compares the iterator and the array size. The end of the loop (GOTO) jumps back here.
-            if (isRegisterLoad() && arrayLoopVariableRegister == getRegisterOperand()) {
+            if (isRegisterLoad() && loopIndexRegisterOperand == getRegisterOperand()) {
                 arrayLoopConditionStart = getPC();
             }
             if (seen == Const.IF_ICMPGE) {
