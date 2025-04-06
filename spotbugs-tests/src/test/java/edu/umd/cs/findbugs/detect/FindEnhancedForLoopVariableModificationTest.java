@@ -11,7 +11,7 @@ class FindEnhancedForLoopVariableModificationTest extends AbstractIntegrationTes
     void testBadEnhancedForLoopUsageChecks() {
         performAnalysis("enhancedForLoopUsage/BadFindEnhancedForLoopVariableModificationTest.class");
 
-        assertBugTypeCountBetween(MEV_BUG_TYPE, 14, 16);
+        assertBugTypeCount(MEV_BUG_TYPE, 16);
 
         final String className = "BadFindEnhancedForLoopVariableModificationTest";
         assertBugAtVar(MEV_BUG_TYPE, className, "modifyCollectionWithEnhancedForLoop", "i", 16);
@@ -28,8 +28,8 @@ class FindEnhancedForLoopVariableModificationTest extends AbstractIntegrationTes
         assertBugAtVar(MEV_BUG_TYPE, className, "modifyOuterEnhancedLoopVariable", "outer", 118);
         assertBugAtVar(MEV_BUG_TYPE, className, "arrayEnhancedLoopWithConversionsAndMethodCalls", "d", 126);
         assertBugAtVar(MEV_BUG_TYPE, className, "collectionEnhancedLoopWithMethodCall", "item", 134);
-        assertBugAtVar(MEV_BUG_TYPE, className, "unclearIntentWithForeach", "num", 144); // No bug, but the intent of modifying the variable might be unclear
-        assertBugAtVar(MEV_BUG_TYPE, className, "unclearIntentWithForeach", "num", 149); // No bug, but the intent of modifying the variable might be unclear
+        assertBugAtVar(MEV_BUG_TYPE, className, "unclearIntentWithForeach", "num", 144);
+        assertBugAtVar(MEV_BUG_TYPE, className, "unclearIntentWithForeach", "num", 149);
     }
 
     @Test
