@@ -1,6 +1,5 @@
 package enhancedForLoopUsage;
 
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -20,7 +19,7 @@ public class GoodFindEnhancedForLoopVariableModificationTest {
     }
 
     void readOnlyAccessToCollection() {
-        List<String> names = Arrays.asList("Alice", "Bob", "Charlie");
+        List<String> names = List.of("Alice", "Bob", "Charlie");
 
         for (String name : names) {
             System.out.println("Name: " + name);
@@ -28,7 +27,7 @@ public class GoodFindEnhancedForLoopVariableModificationTest {
     }
 
     void modifyObjectPropertyWithoutChangingCollection() {
-        List<Person> people = Arrays.asList(new Person("Alice"), new Person("Bob"));
+        List<Person> people = List.of(new Person("Alice"), new Person("Bob"));
 
         for (Person person : people) {
             person.name = "Updated " + person.name;
@@ -36,9 +35,9 @@ public class GoodFindEnhancedForLoopVariableModificationTest {
     }
 
     void modifyNestedCollection() {
-        List<List<Integer>> nestedList = Arrays.asList(
-                Arrays.asList(1, 2, 3),
-                Arrays.asList(4, 5, 6)
+        List<List<Integer>> nestedList = List.of(
+                List.of(1, 2, 3),
+                List.of(4, 5, 6)
         );
 
         for (List<Integer> sublist : nestedList) {
@@ -56,8 +55,8 @@ public class GoodFindEnhancedForLoopVariableModificationTest {
     }
 
     void collectionIteratorLoop() {
-        List<String> names = Arrays.asList("Bob", "Marie", "Anne");
-        for (Iterator i = names.iterator(); i.hasNext();) {
+        List<String> names = List.of("Bob", "Marie", "Anne");
+        for (Iterator<String> i = names.iterator(); i.hasNext();) {
             String name = (String) i.next();
 
             name = "Adam";

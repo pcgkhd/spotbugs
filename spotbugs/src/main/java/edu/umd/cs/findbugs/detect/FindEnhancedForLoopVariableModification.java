@@ -61,15 +61,16 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
         arrayLoopState = ArrayLoopState.INITIAL;
         collectionLoopStart = -1;
         arrayLoopConditionStart = -1;
+        arrayIndexRegisterOperand = -1;
+        iteratorRegisterOperand = -1;
     }
 
     /**
      * <a href="https://docs.oracle.com/javase/1.5.0/docs/guide/language/foreach.html">JSL foreach</a>
-     *
-     * There are two ways to create enhanced loop in Java.
-     * One is by using Collection as the data source. In this occasion java creates an iterator, and iterates through the
+     * There are two ways to create enhanced loops in Java.
+     * One is by using Collection as the data source. In this case Java creates an iterator, and iterates through the
      * Collection with this iterator.
-     * The other way is to use array as the data source. This time Java creates index variable instead of iterator.
+     * The other way is to use array as the data source. This time Java creates an index variable instead of iterator.
      */
     @Override
     public void sawOpcode(int seen) {
@@ -103,9 +104,11 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
             // Initial state: waiting for the `iterator()` method call. The class that contains the 'iterator()' method is not checked,
             // because it can be any of Collection subclasses
             // The `iterator()` method call indicates the start of an enhanced `for` loop.
-            if (seen == Const.INVOKEINTERFACE && getXMethodOperand() != null &&
-                    "()Ljava/util/Iterator;".equals(getXMethodOperand().getSignature()) && "iterator".equals(getXMethodOperand().getName())) {
-                collectionLoopState = CollectionLoopState.ITERATOR_CREATE;
+            if (seen == Const.INVOKEINTERFACE) {
+                var method = getXMethodOperand();
+                if (method != null && "()Ljava/util/Iterator;".equals(method.getSignature()) && "iterator".equals(method.getName())) {
+                    collectionLoopState = CollectionLoopState.ITERATOR_CREATE;
+                }
             }
             break;
 
@@ -131,20 +134,28 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
 
         case COLLECTION_CONDITION:
             // The condition of the loop should be the iterators hasNext() method
-            if (seen == Const.INVOKEINTERFACE && getXMethodOperand() != null && "()Z".equals(getXMethodOperand().getSignature())
-                    && "hasNext".equals(getXMethodOperand().getName()) && "java.util.Iterator".equals(getXMethodOperand().getClassName())) {
-                collectionLoopState = CollectionLoopState.HAS_NEXT;
-            } else {
-                collectionLoopState = CollectionLoopState.INITIAL;
+            if (seen == Const.INVOKEINTERFACE) {
+                var method = getXMethodOperand();
+                if (method != null && "()Z".equals(method.getSignature())
+                        && "hasNext".equals(method.getName())
+                        && "java.util.Iterator".equals(method.getClassName())) {
+                    collectionLoopState = CollectionLoopState.HAS_NEXT;
+                } else {
+                    collectionLoopState = CollectionLoopState.INITIAL;
+                }
             }
             break;
 
         case HAS_NEXT:
             // Check if the next element of the iterator is used
-            if (seen == Const.INVOKEINTERFACE && getXMethodOperand() != null && "()Ljava/lang/Object;".equals(getXMethodOperand().getSignature())
-                    && "next".equals(getXMethodOperand().getName()) && "java.util.Iterator".equals(getXMethodOperand().getClassName())
-                    && (getNextOpcode() == Const.POP || getNextOpcode() == Const.POP2)) {
-                collectionLoopState = CollectionLoopState.INITIAL;
+            if (seen == Const.INVOKEINTERFACE) {
+                var method = getXMethodOperand();
+                if (method != null && "()Ljava/lang/Object;".equals(method.getSignature())
+                        && "next".equals(method.getName())
+                        && "java.util.Iterator".equals(method.getClassName())
+                        && (getNextOpcode() == Const.POP || getNextOpcode() == Const.POP2)) {
+                    collectionLoopState = CollectionLoopState.INITIAL;
+                }
             }
 
             // Storing the next value of the iterator (the actual loop variable)
