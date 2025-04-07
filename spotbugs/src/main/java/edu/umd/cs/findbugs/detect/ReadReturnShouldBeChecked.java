@@ -190,10 +190,9 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
                         new BugInstance(this, "SR_NOT_CHECKED", (wasBufferedInputStream ? HIGH_PRIORITY
                                 : recentCallToAvailable ? LOW_PRIORITY : NORMAL_PRIORITY)).addClassAndMethod(this)
                                 .addCalledMethod(lastCallClass, lastCallMethod, lastCallSig, false), SourceLineAnnotation
-                                .fromVisitedInstruction(getClassContext(), this, locationOfCall));
+                                        .fromVisitedInstruction(getClassContext(), this, locationOfCall));
             }
         }
-
         sawRead = false;
         sawSkip = false;
     }
