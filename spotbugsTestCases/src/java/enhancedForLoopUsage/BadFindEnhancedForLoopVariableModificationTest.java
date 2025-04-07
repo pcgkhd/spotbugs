@@ -6,7 +6,7 @@ import java.util.List;
 
 public class BadFindEnhancedForLoopVariableModificationTest {
     void modifyCollectionWithEnhancedForLoop() {
-        List<Integer> list = Arrays.asList(new Integer[]{13, 14, 15});
+        List<Integer> list = Arrays.asList(13, 14, 15);
         boolean first = true;
 
         System.out.println("Processing list...");
