@@ -9809,9 +9809,9 @@ Using floating-point variables should not be used as loop counters, as they are 
       </p>]]>
     </Details>
   </BugPattern>
-  <BugPattern type="NCR_NOT_CHECKED_READ">
-    <ShortDescription>The array may not be fully filled when using the read() method</ShortDescription>
-    <LongDescription>{1} improperly checks the result of {2}</LongDescription>
+  <BugPattern type="NCR_NOT_PROPERLY_CHECKED_READ">
+    <ShortDescription>Return value of read() is not properly checked, array may be partially filled</ShortDescription>
+    <LongDescription>{1} does not properly check the return value of {2}, which may result in using a partially filled array.</LongDescription>
     <Details>
       <![CDATA[
         <p>

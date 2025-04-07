@@ -5,18 +5,19 @@ import org.junit.jupiter.api.Test;
 
 class ReadReturnShouldBeCheckedTest extends AbstractIntegrationTest {
 
-    private static final String NCR_BUG_TYPE = "NCR_NOT_CHECKED_READ";
+    private static final String NCR_BUG_TYPE = "NCR_NOT_PROPERLY_CHECKED_READ";
 
     @Test
     void testNotCheckedRead() {
         performAnalysis("partialFilledArrayWithRead/BadReadReturnShouldBeCheckedTest.class");
 
-        assertBugTypeCount(NCR_BUG_TYPE, 3);
+        assertBugTypeCount(NCR_BUG_TYPE, 4);
 
         final String className = "BadReadReturnShouldBeCheckedTest";
         assertBugInMethodAtLine(NCR_BUG_TYPE, className, "readBytes", 13);
         assertBugInMethodAtLine(NCR_BUG_TYPE, className, "readBytesWithOffset", 22);
         assertBugInMethodAtLine(NCR_BUG_TYPE, className, "readFromBufferedReader", 31);
+        assertBugInMethodAtLine(NCR_BUG_TYPE, className, "readBytesComparedToFloat", 39);
     }
 
     @Test

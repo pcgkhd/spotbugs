@@ -19,11 +19,13 @@
 
 package edu.umd.cs.findbugs.detect;
 
-import java.util.List;
-
 import org.apache.bcel.Const;
 import org.apache.bcel.Repository;
 import org.apache.bcel.classfile.Code;
+import org.apache.bcel.classfile.Constant;
+import org.apache.bcel.classfile.ConstantFloat;
+import org.apache.bcel.classfile.ConstantDouble;
+import org.apache.bcel.classfile.ConstantLong;
 
 import edu.umd.cs.findbugs.BugAccumulator;
 import edu.umd.cs.findbugs.BugInstance;
@@ -33,11 +35,15 @@ import edu.umd.cs.findbugs.SourceLineAnnotation;
 import edu.umd.cs.findbugs.StatelessDetector;
 import edu.umd.cs.findbugs.ba.ch.Subtypes2;
 
+import java.util.Set;
+
 public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implements StatelessDetector {
 
     boolean sawRead = false;
 
     boolean sawSkip = false;
+
+    boolean sawConversion = false;
 
     boolean recentCallToAvailable = false;
 
@@ -51,10 +57,13 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
 
     private String lastCallClass = null, lastCallMethod = null, lastCallSig = null;
 
-    private final List<Short> intComparisons = List.of(
+    private static final Set<Short> comparisons = Set.of(
             Const.IF_ICMPEQ, Const.IF_ICMPNE,
             Const.IF_ICMPLT, Const.IF_ICMPGE,
-            Const.IF_ICMPGT, Const.IF_ICMPLE);
+            Const.IF_ICMPGT, Const.IF_ICMPLE,
+            Const.FCMPL, Const.FCMPG,
+            Const.DCMPL, Const.DCMPG,
+            Const.LCMP);
 
     public ReadReturnShouldBeChecked(BugReporter bugReporter) {
         this.accumulator = new BugAccumulator(bugReporter);
@@ -65,6 +74,7 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
         sawAvailable = 0;
         sawRead = false;
         sawSkip = false;
+        sawConversion = false;
         super.visit(obj);
         accumulator.reportAccumulatedBugs();
     }
@@ -148,11 +158,22 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
 
         }
 
-        if (sawRead && seen == Const.ICONST_M1 && intComparisons.contains((short) getNextOpcode())) {
+        if (sawRead && seen == Const.ICONST_M1 && comparisons.contains((short) getNextOpcode())) {
             accumulator.accumulateBug(
-                    new BugInstance(this, "NCR_NOT_CHECKED_READ", recentCallToAvailable ? LOW_PRIORITY : NORMAL_PRIORITY)
-                            .addClassAndMethod(this).addCalledMethod(lastCallClass, lastCallMethod, lastCallSig, false),
+                    new BugInstance(this, "NCR_NOT_PROPERLY_CHECKED_READ", recentCallToAvailable ? LOW_PRIORITY : NORMAL_PRIORITY)
+                            .addClassAndMethod(this)
+                            .addCalledMethod(lastCallClass, lastCallMethod, lastCallSig, false),
                     SourceLineAnnotation.fromVisitedInstruction(getClassContext(), this, locationOfCall));
+        }
+
+        if (sawConversion) {
+            reportIfMinusOneConstant(getConstantRefOperand());
+            sawConversion = false;
+        }
+
+        if (sawRead && (seen == Const.I2F || seen == Const.I2D || seen == Const.I2L) &&
+                comparisons.contains((short) getNextCodeByte(2))) {
+            sawConversion = true;
         }
 
         if ((seen == Const.POP) || (seen == Const.POP2)) {
@@ -169,10 +190,31 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
                         new BugInstance(this, "SR_NOT_CHECKED", (wasBufferedInputStream ? HIGH_PRIORITY
                                 : recentCallToAvailable ? LOW_PRIORITY : NORMAL_PRIORITY)).addClassAndMethod(this)
                                 .addCalledMethod(lastCallClass, lastCallMethod, lastCallSig, false), SourceLineAnnotation
-                                        .fromVisitedInstruction(getClassContext(), this, locationOfCall));
+                                .fromVisitedInstruction(getClassContext(), this, locationOfCall));
             }
         }
+
         sawRead = false;
         sawSkip = false;
+    }
+
+    private void reportIfMinusOneConstant(Constant c) {
+        boolean isMinusOne = false;
+
+        if (c instanceof ConstantFloat) {
+            isMinusOne = ((ConstantFloat) c).getBytes() == -1.0f;
+        } else if (c instanceof ConstantDouble) {
+            isMinusOne = ((ConstantDouble) c).getBytes() == -1.0d;
+        } else if (c instanceof ConstantLong) {
+            isMinusOne = ((ConstantLong) c).getBytes() == -1L;
+        }
+
+        if (isMinusOne) {
+            accumulator.accumulateBug(
+                    new BugInstance(this, "NCR_NOT_PROPERLY_CHECKED_READ", recentCallToAvailable ? LOW_PRIORITY : NORMAL_PRIORITY)
+                            .addClassAndMethod(this)
+                            .addCalledMethod(lastCallClass, lastCallMethod, lastCallSig, false),
+                    SourceLineAnnotation.fromVisitedInstruction(getClassContext(), this, locationOfCall));
+        }
     }
 }

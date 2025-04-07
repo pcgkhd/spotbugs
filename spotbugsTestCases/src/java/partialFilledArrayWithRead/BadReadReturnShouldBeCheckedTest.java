@@ -33,4 +33,12 @@ public class BadReadReturnShouldBeCheckedTest {
         }
         return new String(data);
     }
+
+    String readBytesComparedToFloat(InputStream in) throws IOException {
+        byte[] data = new byte[1024];
+        if (in.read(data) == -1F) {
+            throw new EOFException();
+        }
+        return new String(data, "UTF-8");
+    }
 }

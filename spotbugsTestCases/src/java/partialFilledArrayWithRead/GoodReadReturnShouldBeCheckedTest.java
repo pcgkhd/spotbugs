@@ -4,29 +4,74 @@ import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.BufferedReader;
 
 public class GoodReadReturnShouldBeCheckedTest {
     public static String readBytes(InputStream in) throws IOException {
         int offset = 0;
         int bytesRead = 0;
         byte[] data = new byte[1024];
-        while ((bytesRead = in.read(data, offset, data.length - offset))
-                != -1) {
+        while ((bytesRead = in.read(data, offset, data.length - offset)) != -1) {
             offset += bytesRead;
             if (offset >= data.length) {
                 break;
             }
         }
-        String str = new String(data, 0, offset, "UTF-8");
-        return str;
+        return new String(data, 0, offset, "UTF-8");
     }
 
-    public static String readFullyBytes(FileInputStream fis)
-            throws IOException {
+    public static String singleReadWithProperReturnCheck(FileInputStream fis) throws IOException {
+        int size = 1024;
+        byte[] data = new byte[size];
+        DataInputStream dis = new DataInputStream(fis);
+        if (dis.read(data) < size) {
+            throw new IOException(String.format("Failed to read %s bytes", size));
+        }
+        return new String(data, "UTF-8");
+    }
+
+    public static String readFullyBytes(FileInputStream fis) throws IOException {
         byte[] data = new byte[1024];
         DataInputStream dis = new DataInputStream(fis);
         dis.readFully(data);
-        String str = new String(data, "UTF-8");
-        return str;
+        return new String(data, "UTF-8");
+    }
+
+    public static String readBytesWithDoWhile(InputStream in) throws IOException {
+        int offset = 0;
+        int bytesRead;
+        byte[] data = new byte[1024];
+        do {
+            bytesRead = in.read(data, offset, data.length - offset);
+            if (bytesRead == -1) break;
+            offset += bytesRead;
+        } while (offset < data.length);
+        return new String(data, 0, offset, "UTF-8");
+    }
+
+    public static String readBytesWithFor(InputStream in) throws IOException {
+        byte[] data = new byte[1024];
+        int offset = 0;
+        int bytesRead;
+
+        for (; offset < data.length; offset += bytesRead) {
+            bytesRead = in.read(data, offset, data.length - offset);
+            if (bytesRead == -1) {
+                break;
+            }
+        }
+        return new String(data, 0, offset, "UTF-8");
+    }
+    public static String readCharsFully(BufferedReader reader) throws IOException {
+        char[] buffer = new char[1024];
+        int offset = 0;
+        int charsRead;
+
+        while (offset < buffer.length &&
+                (charsRead = reader.read(buffer, offset, buffer.length - offset)) != -1) {
+            offset += charsRead;
+        }
+
+        return new String(buffer, 0, offset);
     }
 }
