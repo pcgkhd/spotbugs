@@ -1337,5 +1337,5 @@
           <BugPattern abbrev="US" type="US_USELESS_SUPPRESSION_ON_METHOD" category="STYLE"/>
           <BugPattern abbrev="US" type="US_USELESS_SUPPRESSION_ON_METHOD_PARAMETER" category="STYLE"/>
           <BugPattern abbrev="US" type="US_USELESS_SUPPRESSION_ON_PACKAGE" category="STYLE"/>
-          <BugPattern abbrev="NCR" type="NCR_NOT_PROPERLY_CHECKED_READ" category="BAD_PRACTICE"/>
+          <BugPattern abbrev="NCR" type="NCR_NOT_PROPERLY_CHECKED_READ" category="BAD_PRACTICE" cweid="135"/>
 </FindbugsPlugin>
