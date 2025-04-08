@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 public class BadReadReturnShouldBeCheckedTest {
 
@@ -13,7 +14,7 @@ public class BadReadReturnShouldBeCheckedTest {
         if (in.read(data) == -1) {
             throw new EOFException();
         }
-        return new String(data, "UTF-8");
+        return new String(data, StandardCharsets.UTF_8);
     }
 
     public static String readBytesWithOffset(InputStream in) throws IOException {
@@ -22,7 +23,7 @@ public class BadReadReturnShouldBeCheckedTest {
         if (in.read(data, offset, data.length - offset) != -1) {
             throw new EOFException();
         }
-        return new String(data, "UTF-8");
+        return new String(data, StandardCharsets.UTF_8);
     }
 
     public String readFromBufferedReader(BufferedReader bufferedReader) throws IOException {
@@ -39,6 +40,6 @@ public class BadReadReturnShouldBeCheckedTest {
         if (in.read(data) == -1F) {
             throw new EOFException();
         }
-        return new String(data, "UTF-8");
+        return new String(data, StandardCharsets.UTF_8);
     }
 }

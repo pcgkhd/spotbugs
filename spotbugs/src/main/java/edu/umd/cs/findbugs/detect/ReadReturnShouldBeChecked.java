@@ -43,7 +43,7 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
 
     boolean sawSkip = false;
 
-    boolean sawConversion = false;
+    private boolean sawConversion = false;
 
     boolean recentCallToAvailable = false;
 
@@ -57,7 +57,7 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
 
     private String lastCallClass = null, lastCallMethod = null, lastCallSig = null;
 
-    private static final Set<Short> comparisons = Set.of(
+    private static final Set<Short> comparisonOpcodes = Set.of(
             Const.IF_ICMPEQ, Const.IF_ICMPNE,
             Const.IF_ICMPLT, Const.IF_ICMPGE,
             Const.IF_ICMPGT, Const.IF_ICMPLE,
@@ -158,7 +158,7 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
 
         }
 
-        if (sawRead && seen == Const.ICONST_M1 && comparisons.contains((short) getNextOpcode())) {
+        if (sawRead && seen == Const.ICONST_M1 && comparisonOpcodes.contains((short) getNextOpcode())) {
             accumulator.accumulateBug(
                     new BugInstance(this, "NCR_NOT_PROPERLY_CHECKED_READ", recentCallToAvailable ? LOW_PRIORITY : NORMAL_PRIORITY)
                             .addClassAndMethod(this)
@@ -171,8 +171,8 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
             sawConversion = false;
         }
 
-        if (sawRead && (seen == Const.I2F || seen == Const.I2D || seen == Const.I2L) &&
-                comparisons.contains((short) getNextCodeByte(2))) {
+        if (sawRead && (seen == Const.I2F || seen == Const.I2D || seen == Const.I2L)
+                && comparisonOpcodes.contains((short) getNextCodeByte(2))) {
             sawConversion = true;
         }
 
