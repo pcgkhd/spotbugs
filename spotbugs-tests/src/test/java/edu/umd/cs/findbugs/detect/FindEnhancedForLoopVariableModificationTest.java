@@ -14,22 +14,22 @@ class FindEnhancedForLoopVariableModificationTest extends AbstractIntegrationTes
         assertBugTypeCount(MEV_BUG_TYPE, 16);
 
         final String className = "BadFindEnhancedForLoopVariableModificationTest";
-        assertBugAtVar(MEV_BUG_TYPE, className, "modifyCollectionWithEnhancedForLoop", "i", 16);
-        assertBugAtVar(MEV_BUG_TYPE, className, "modifyStringElement", "name", 31);
-        assertBugAtVar(MEV_BUG_TYPE, className, "loopWithinLoop", "number", 40);
-        assertBugAtVar(MEV_BUG_TYPE, className, "notEnhancedLoopWithinEnhancedLoops", "number", 51);
-        assertBugAtVar(MEV_BUG_TYPE, className, "modifyOuterLoopVariable", "numbers", 66);
-        assertBugAtVar(MEV_BUG_TYPE, className, "multipleEnhancedLoopVariableModification", "number", 75);
-        assertBugAtVar(MEV_BUG_TYPE, className, "multipleEnhancedLoopVariableModification", "numbers", 77);
-        assertBugAtVar(MEV_BUG_TYPE, className, "arrayEnhancedForLoop", "number", 85);
-        assertBugAtVar(MEV_BUG_TYPE, className, "charArrayEnhancedForLoop", "character", 93);
-        assertBugAtVar(MEV_BUG_TYPE, className, "mixedForLoopsWithEnhancedLoops", "character", 105);
-        assertBugAtVar(MEV_BUG_TYPE, className, "mixedForLoopsWithEnhancedLoops", "number", 107);
-        assertBugAtVar(MEV_BUG_TYPE, className, "modifyOuterEnhancedLoopVariable", "outer", 118);
-        assertBugAtVar(MEV_BUG_TYPE, className, "arrayEnhancedLoopWithConversionsAndMethodCalls", "d", 126);
-        assertBugAtVar(MEV_BUG_TYPE, className, "collectionEnhancedLoopWithMethodCall", "item", 134);
-        assertBugAtVar(MEV_BUG_TYPE, className, "unclearIntentWithForeach", "num", 144);
-        assertBugAtVar(MEV_BUG_TYPE, className, "unclearIntentWithForeach", "num", 149);
+        assertBugAtVar(MEV_BUG_TYPE, className, "modifyCollectionWithEnhancedForLoop", "i", 15);
+        assertBugAtVar(MEV_BUG_TYPE, className, "modifyStringElement", "name", 30);
+        assertBugAtVar(MEV_BUG_TYPE, className, "loopWithinLoop", "number", 39);
+        assertBugAtVar(MEV_BUG_TYPE, className, "notEnhancedLoopWithinEnhancedLoops", "number", 50);
+        assertBugAtVar(MEV_BUG_TYPE, className, "modifyOuterLoopVariable", "numbers", 65);
+        assertBugAtVar(MEV_BUG_TYPE, className, "multipleEnhancedLoopVariableModification", "number", 74);
+        assertBugAtVar(MEV_BUG_TYPE, className, "multipleEnhancedLoopVariableModification", "numbers", 76);
+        assertBugAtVar(MEV_BUG_TYPE, className, "arrayEnhancedForLoop", "number", 84);
+        assertBugAtVar(MEV_BUG_TYPE, className, "charArrayEnhancedForLoop", "character", 92);
+        assertBugAtVar(MEV_BUG_TYPE, className, "mixedForLoopsWithEnhancedLoops", "character", 104);
+        assertBugAtVar(MEV_BUG_TYPE, className, "mixedForLoopsWithEnhancedLoops", "number", 106);
+        assertBugAtVar(MEV_BUG_TYPE, className, "modifyOuterEnhancedLoopVariable", "outer", 117);
+        assertBugAtVar(MEV_BUG_TYPE, className, "arrayEnhancedLoopWithConversionsAndMethodCalls", "d", 125);
+        assertBugAtVar(MEV_BUG_TYPE, className, "collectionEnhancedLoopWithMethodCall", "item", 133);
+        assertBugAtVar(MEV_BUG_TYPE, className, "unclearIntentWithForeach", "num", 143);
+        assertBugAtVar(MEV_BUG_TYPE, className, "unclearIntentWithForeach", "num", 148);
     }
 
     @Test

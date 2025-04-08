@@ -1,12 +1,11 @@
 package enhancedForLoopUsage;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class BadFindEnhancedForLoopVariableModificationTest {
     void modifyCollectionWithEnhancedForLoop() {
-        List<Integer> list = Arrays.asList(13, 14, 15);
+        List<Integer> list = List.of(13, 14, 15);
         boolean first = true;
 
         System.out.println("Processing list...");
@@ -25,7 +24,7 @@ public class BadFindEnhancedForLoopVariableModificationTest {
     }
 
     void modifyStringElement() {
-        List<String> names = Arrays.asList("Alice", "Bob", "Charlie");
+        List<String> names = List.of("Alice", "Bob", "Charlie");
 
         for (String name : names) {
             name = "Modified";
@@ -33,7 +32,7 @@ public class BadFindEnhancedForLoopVariableModificationTest {
     }
 
     void loopWithinLoop() {
-        List<List<Integer>> numberLists = Arrays.asList(List.of(1, 2, 4), List.of(1, 2, 4), List.of(1, 2, 3));
+        List<List<Integer>> numberLists = List.of(List.of(1, 2, 4), List.of(1, 2, 4), List.of(1, 2, 3));
 
         for (List<Integer> numbers : numberLists) {
             for (Integer number : numbers) {
@@ -43,7 +42,7 @@ public class BadFindEnhancedForLoopVariableModificationTest {
     }
 
     void notEnhancedLoopWithinEnhancedLoops() {
-        List<List<Integer>> numberLists = Arrays.asList(List.of(1, 2, 4), List.of(1, 2, 4), List.of(1, 2, 3));
+        List<List<Integer>> numberLists = List.of(List.of(1, 2, 4), List.of(1, 2, 4), List.of(1, 2, 3));
 
         for (List<Integer> numbers : numberLists) {
             for (int i = 0; i < 10; i++) {
@@ -55,7 +54,7 @@ public class BadFindEnhancedForLoopVariableModificationTest {
     }
 
     void modifyOuterLoopVariable() {
-        List<List<Integer>> numberLists = Arrays.asList(List.of(1, 2, 4), List.of(1, 2, 4), List.of(1, 2, 3));
+        List<List<Integer>> numberLists = List.of(List.of(1, 2, 4), List.of(1, 2, 4), List.of(1, 2, 3));
 
         for (List<Integer> numbers : numberLists) {
             for (int i = 0; i < 10; i++) {
@@ -68,7 +67,7 @@ public class BadFindEnhancedForLoopVariableModificationTest {
     }
 
     void multipleEnhancedLoopVariableModification() {
-        List<List<Integer>> numberLists = Arrays.asList(List.of(1, 2, 4), List.of(1, 2, 4), List.of(1, 2, 3));
+        List<List<Integer>> numberLists = List.of(List.of(1, 2, 4), List.of(1, 2, 4), List.of(1, 2, 3));
 
         for (List<Integer> numbers : numberLists) {
             for (Integer number : numbers) {
