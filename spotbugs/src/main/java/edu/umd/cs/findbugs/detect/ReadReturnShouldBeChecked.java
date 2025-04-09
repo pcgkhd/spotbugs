@@ -19,31 +19,25 @@
 
 package edu.umd.cs.findbugs.detect;
 
-import org.apache.bcel.Const;
-import org.apache.bcel.Repository;
-import org.apache.bcel.classfile.Code;
-import org.apache.bcel.classfile.Constant;
-import org.apache.bcel.classfile.ConstantFloat;
-import org.apache.bcel.classfile.ConstantDouble;
-import org.apache.bcel.classfile.ConstantLong;
-
 import edu.umd.cs.findbugs.BugAccumulator;
 import edu.umd.cs.findbugs.BugInstance;
 import edu.umd.cs.findbugs.BugReporter;
-import edu.umd.cs.findbugs.BytecodeScanningDetector;
 import edu.umd.cs.findbugs.SourceLineAnnotation;
 import edu.umd.cs.findbugs.StatelessDetector;
 import edu.umd.cs.findbugs.ba.ch.Subtypes2;
+import edu.umd.cs.findbugs.bcel.OpcodeStackDetector;
+import edu.umd.cs.findbugs.OpcodeStack;
+import org.apache.bcel.Const;
+import org.apache.bcel.Repository;
+import org.apache.bcel.classfile.Code;
 
 import java.util.Set;
 
-public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implements StatelessDetector {
+public class ReadReturnShouldBeChecked extends OpcodeStackDetector implements StatelessDetector {
 
     boolean sawRead = false;
 
     boolean sawSkip = false;
-
-    private boolean sawConversion = false;
 
     boolean recentCallToAvailable = false;
 
@@ -56,6 +50,10 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
     private int locationOfCall;
 
     private String lastCallClass = null, lastCallMethod = null, lastCallSig = null;
+
+    private OpcodeStack.Item readItem;
+
+    private OpcodeStack.Item itemToBeCompared;
 
     private static final Set<Short> comparisonOpcodes = Set.of(
             Const.IF_ICMPEQ, Const.IF_ICMPNE,
@@ -74,7 +72,8 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
         sawAvailable = 0;
         sawRead = false;
         sawSkip = false;
-        sawConversion = false;
+        readItem = null;
+        itemToBeCompared = null;
         super.visit(obj);
         accumulator.reportAccumulatedBugs();
     }
@@ -114,6 +113,7 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
 
     @Override
     public void sawOpcode(int seen) {
+        readItem = null;
 
         if (seen == Const.INVOKEVIRTUAL || seen == Const.INVOKEINTERFACE) {
             lastCallClass = getDottedClassConstantOperand();
@@ -140,6 +140,7 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
             sawRead = true;
             recentCallToAvailable = sawAvailable > 0;
             locationOfCall = getPC();
+            readItem = stack.getStackItem(0);
             return;
         }
         if ((seen == Const.INVOKEVIRTUAL || seen == Const.INVOKEINTERFACE)
@@ -156,24 +157,6 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
             recentCallToAvailable = sawAvailable > 0 && !wasBufferedInputStream;
             return;
 
-        }
-
-        if (sawRead && seen == Const.ICONST_M1 && comparisonOpcodes.contains((short) getNextOpcode())) {
-            accumulator.accumulateBug(
-                    new BugInstance(this, "NCR_NOT_PROPERLY_CHECKED_READ", recentCallToAvailable ? LOW_PRIORITY : NORMAL_PRIORITY)
-                            .addClassAndMethod(this)
-                            .addCalledMethod(lastCallClass, lastCallMethod, lastCallSig, false),
-                    SourceLineAnnotation.fromVisitedInstruction(getClassContext(), this, locationOfCall));
-        }
-
-        if (sawConversion) {
-            reportIfMinusOneConstant(getConstantRefOperand());
-            sawConversion = false;
-        }
-
-        if (sawRead && (seen == Const.I2F || seen == Const.I2D || seen == Const.I2L)
-                && comparisonOpcodes.contains((short) getNextCodeByte(2))) {
-            sawConversion = true;
         }
 
         if ((seen == Const.POP) || (seen == Const.POP2)) {
@@ -193,19 +176,53 @@ public class ReadReturnShouldBeChecked extends BytecodeScanningDetector implemen
                                         .fromVisitedInstruction(getClassContext(), this, locationOfCall));
             }
         }
+
+        if (sawRead && (seen == Const.I2F || seen == Const.I2D || seen == Const.I2L)) {
+            readItem = stack.getStackItem(0);
+        }
+
+        if (comparisonOpcodes.contains((short) seen) && stack.getStackDepth() > 1) {
+            OpcodeStack.Item rightItem = stack.getStackItem(0);
+            OpcodeStack.Item leftItem = stack.getStackItem(1);
+            Object value = null;
+            if (leftItem.equals(itemToBeCompared)) {
+                value = rightItem.getConstant();
+            } else if (rightItem.equals(itemToBeCompared)) {
+                value = leftItem.getConstant();
+            }
+
+            reportIfMinusOneValue(value);
+        }
+
+        //The return value of the read() is copied into a variable
+        if (seen == Const.DUP) {
+            itemToBeCompared = null;
+        }
+
         sawRead = false;
         sawSkip = false;
     }
 
-    private void reportIfMinusOneConstant(Constant c) {
+    @Override
+    public void afterOpcode(int seen) {
+        super.afterOpcode(seen);
+
+        if (readItem != null) {
+            itemToBeCompared = stack.getStackItem(0);
+        }
+    }
+
+    private void reportIfMinusOneValue(Object value) {
         boolean isMinusOne = false;
 
-        if (c instanceof ConstantFloat) {
-            isMinusOne = ((ConstantFloat) c).getBytes() == -1.0f;
-        } else if (c instanceof ConstantDouble) {
-            isMinusOne = ((ConstantDouble) c).getBytes() == -1.0d;
-        } else if (c instanceof ConstantLong) {
-            isMinusOne = ((ConstantLong) c).getBytes() == -1L;
+        if (value instanceof Integer) {
+            isMinusOne = (Integer) value == -1;
+        } else if (value instanceof Float) {
+            isMinusOne = (Float) value == -1.0f;
+        } else if (value instanceof Double) {
+            isMinusOne = (Double) value == -1.0d;
+        } else if (value instanceof Long) {
+            isMinusOne = (Long) value == -1L;
         }
 
         if (isMinusOne) {

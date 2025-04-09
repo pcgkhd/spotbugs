@@ -42,4 +42,20 @@ public class BadReadReturnShouldBeCheckedTest {
         }
         return new String(data, StandardCharsets.UTF_8);
     }
+
+    String changeOrderOfComparing(InputStream in) throws IOException {
+        byte[] data = new byte[1024];
+        if (-1 == in.read(data)) {
+            throw new EOFException();
+        }
+        return new String(data, StandardCharsets.UTF_8);
+    }
+
+    String changeOrderOfComparingLong(InputStream in) throws IOException {
+        byte[] data = new byte[1024];
+        if (-1L == in.read(data)) {
+            throw new EOFException();
+        }
+        return new String(data, StandardCharsets.UTF_8);
+    }
 }

@@ -13,7 +13,7 @@ class ReadReturnShouldBeCheckedTest extends AbstractIntegrationTest {
     void testNotCheckedRead() {
         performAnalysis("partialFilledArrayWithRead/BadReadReturnShouldBeCheckedTest.class");
 
-        assertBugTypeCount(NCR_BUG_TYPE, 4);
+        assertBugTypeCount(NCR_BUG_TYPE, 6);
         assertBugTypeCount(RR_BUG_TYPE, 0);
         assertBugTypeCount(SR_BUG_TYPE, 0);
 
@@ -22,6 +22,8 @@ class ReadReturnShouldBeCheckedTest extends AbstractIntegrationTest {
         assertBugInMethodAtLine(NCR_BUG_TYPE, className, "readBytesWithOffset", 23);
         assertBugInMethodAtLine(NCR_BUG_TYPE, className, "readFromBufferedReader", 32);
         assertBugInMethodAtLine(NCR_BUG_TYPE, className, "readBytesComparedToFloat", 40);
+        assertBugInMethodAtLine(NCR_BUG_TYPE, className, "changeOrderOfComparing", 48);
+        assertBugInMethodAtLine(NCR_BUG_TYPE, className, "changeOrderOfComparingLong", 56);
     }
 
     @Test
