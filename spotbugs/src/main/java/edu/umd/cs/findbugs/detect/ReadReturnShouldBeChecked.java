@@ -51,7 +51,7 @@ public class ReadReturnShouldBeChecked extends OpcodeStackDetector implements St
 
     private String lastCallClass = null, lastCallMethod = null, lastCallSig = null;
 
-    private OpcodeStack.Item readItem;
+    private boolean readProcessed = false;
 
     private OpcodeStack.Item itemToBeCompared;
 
@@ -72,7 +72,7 @@ public class ReadReturnShouldBeChecked extends OpcodeStackDetector implements St
         sawAvailable = 0;
         sawRead = false;
         sawSkip = false;
-        readItem = null;
+        readProcessed = false;
         itemToBeCompared = null;
         super.visit(obj);
         accumulator.reportAccumulatedBugs();
@@ -113,7 +113,7 @@ public class ReadReturnShouldBeChecked extends OpcodeStackDetector implements St
 
     @Override
     public void sawOpcode(int seen) {
-        readItem = null;
+        readProcessed = false;
 
         if (seen == Const.INVOKEVIRTUAL || seen == Const.INVOKEINTERFACE) {
             lastCallClass = getDottedClassConstantOperand();
@@ -140,7 +140,7 @@ public class ReadReturnShouldBeChecked extends OpcodeStackDetector implements St
             sawRead = true;
             recentCallToAvailable = sawAvailable > 0;
             locationOfCall = getPC();
-            readItem = stack.getStackItem(0);
+            readProcessed = true;
             return;
         }
         if ((seen == Const.INVOKEVIRTUAL || seen == Const.INVOKEINTERFACE)
@@ -178,7 +178,7 @@ public class ReadReturnShouldBeChecked extends OpcodeStackDetector implements St
         }
 
         if (sawRead && (seen == Const.I2F || seen == Const.I2D || seen == Const.I2L)) {
-            readItem = stack.getStackItem(0);
+            readProcessed = true;
         }
 
         if (comparisonOpcodes.contains((short) seen) && stack.getStackDepth() > 1) {
@@ -207,8 +207,8 @@ public class ReadReturnShouldBeChecked extends OpcodeStackDetector implements St
     public void afterOpcode(int seen) {
         super.afterOpcode(seen);
 
-        if (readItem != null) {
-            itemToBeCompared = stack.getStackItem(0);
+        if (readProcessed) {
+            itemToBeCompared = stack.getStackDepth() > 0 ? stack.getStackItem(0) : null;
         }
     }
 
