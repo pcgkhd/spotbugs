@@ -63,6 +63,7 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
         arrayLoopConditionStart = -1;
         arrayIndexRegisterOperand = -1;
         iteratorRegisterOperand = -1;
+        loopVariableToConditionPosition.clear();
     }
 
     /**
@@ -83,13 +84,6 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
                     .add(new LocalVariableAnnotation(variable.getName(), variable.getIndex(), this.getPC()));
 
             bugReporter.reportBug(bug);
-            collectionLoopState = CollectionLoopState.INITIAL;
-            arrayLoopState = ArrayLoopState.INITIAL;
-        }
-
-        if (seen == Const.GOTO && !loopVariableToConditionPosition.isEmpty()) {
-            int gotoTarget = getBranchTarget();
-            loopVariableToConditionPosition.values().remove(gotoTarget);
             collectionLoopState = CollectionLoopState.INITIAL;
             arrayLoopState = ArrayLoopState.INITIAL;
         }
@@ -220,9 +214,11 @@ public class FindEnhancedForLoopVariableModification extends OpcodeStackDetector
 
         case ARRAY_CONDITION:
             // After the condition it stores the actual loop variable
-            LocalVariable variable = isRegisterStore() ? getLocalVariable() : null;
-            if (variable != null) {
-                loopVariableToConditionPosition.put(variable, arrayLoopConditionStart);
+            if (isRegisterStore()) {
+                LocalVariable variable = getLocalVariable();
+                if (variable != null) {
+                    loopVariableToConditionPosition.put(variable, arrayLoopConditionStart);
+                }
                 arrayLoopState = ArrayLoopState.INITIAL;
                 arrayLoopConditionStart = -1;
             }

@@ -150,6 +150,28 @@ public class BadFindEnhancedForLoopVariableModificationTest {
         }
     }
 
+    void modifyElementWithBreak() {
+        List<Integer> numbers = List.of(1, 2, 3);
+
+        for (Integer num : numbers) {
+            if (num > 2) {
+                break;
+            }
+            num = 0;
+        }
+    }
+
+    void modifyElementWithContinue() {
+        List<Integer> numbers = List.of(1, 2, 3);
+
+        for (Integer num : numbers) {
+            if (num > 2) {
+                continue;
+            }
+            num = 0;
+        }
+    }
+
     int[] getArray(int[] array) {
         return array;
     }

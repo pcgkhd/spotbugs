@@ -1856,15 +1856,6 @@ factory pattern to create these objects.</p>
       ]]>
     </Details>
   </Detector>
-  <Detector class="edu.umd.cs.findbugs.detect.ModifyEnhancedForLoopVariable">
-    <Details>
-      <![CDATA[
-          <p>Detects modifications of a collection’s elements during an enhanced for loop, which can lead to
-             unexpected behavior as the loop variable is a local copy and not a reference to the original element.
-          </p>
-      ]]>
-    </Details>
-  </Detector>
   <Detector class="edu.umd.cs.findbugs.detect.SharedVariableAtomicityDetector">
     <Details>
       <![CDATA[
@@ -9839,12 +9830,13 @@ Using floating-point variables should not be used as loop counters, as they are 
       Leaving them may result in accidental warnings suppression.
       The annotation was probably added to suppress a warning raised by SpotBugs, but now SpotBugs does not report the bug anymore. Either
       the bug was solved or SpotBugs was updated, and the bug is no longer raised by that code.
+      The unnecessary annotation is not reported when the package's <code>package-info</code> is annotated with an <code>&amp;Generated</code> annotation with retention CLASS or RUNTIME.
       </p>]]>
     </Details>
   </BugPattern>
   <BugPattern type="MEV_MODIFY_ENHANCED_FOR_LOOP_VARIABLE">
     <ShortDescription>Modifying the loop variable in a foreach loop</ShortDescription>
-    <LongDescription>Modifying the loop variable at line {2} in an enhanced for loop does not affect the underlying collection or array, potentially causing unexpected behavior or ConcurrentModificationException.</LongDescription>
+    <LongDescription>Modifying the loop variable at line {2} doesn't affect the original data and may cause issues.</LongDescription>
     <Details>
       <![CDATA[
         <p>Modifying a collection's element while iterating over it using an enhanced for loop can result in a ConcurrentModificationException or unexpected behavior.
