@@ -126,16 +126,13 @@ public class ClassInfo extends ClassNameAndSuperclassInfo implements XClass {
                     String[] mArguments = new SignatureParser(m.getSignature()).getArguments();
 
                     for (MethodInfo to : methodInfoList) {
-                        if (m != to) {
-                            if (!to.isBridge()
-                                    && m.getName().equals(to.getName())
-                                    && Arrays.equals(mArguments, new SignatureParser(to.getSignature()).getArguments())) {
-                                if (DEBUG) {
-                                    System.out.println("  to method:" + to);
-                                }
-                                bridgedSignatures.put(m, to.getSignature());
+                        if (m != to && !to.isBridge()
+                                && m.getName().equals(to.getName())
+                                && Arrays.equals(mArguments, new SignatureParser(to.getSignature()).getArguments())) {
+                            if (DEBUG) {
+                                System.out.println("  to method:" + to);
                             }
-
+                            bridgedSignatures.put(m, to.getSignature());
                         }
                     } // end  for(MethodInfo to
                 } // end  if (m.isBridge()
@@ -325,8 +322,9 @@ public class ClassInfo extends ClassNameAndSuperclassInfo implements XClass {
     public XMethod findMethod(String methodName, String methodSig, boolean isStatic) {
         int hash = FieldOrMethodDescriptor.getNameSigHashCode(methodName, methodSig);
         for (MethodInfo mInfo : xMethods) {
-            if (mInfo.getNameSigHashCode() == hash && mInfo.getName().equals(methodName)
-                    && mInfo.getSignature().equals(methodSig) && mInfo.isStatic() == isStatic) {
+            if (mInfo.getName().equals(methodName)
+                    && mInfo.isStatic() == isStatic
+                    && ((mInfo.getNameSigHashCode() == hash && mInfo.getSignature().equals(methodSig)) || mInfo.hasPolymorphicSignature())) {
                 return mInfo;
             }
         }

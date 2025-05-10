@@ -106,7 +106,8 @@ public class SortedBugCollection implements BugCollection {
 
     private boolean applySuppressions;
 
-    long timeStartedLoading, timeFinishedLoading;
+    long timeStartedLoading;
+    long timeFinishedLoading;
 
     String dataSource = "";
 
@@ -952,10 +953,11 @@ public class SortedBugCollection implements BugCollection {
         }
 
         invalidateHashes();
-        if (!bugInstance.isDead()) {
+        boolean added = bugSet.add(bugInstance);
+        if (added && !bugInstance.isDead()) {
             projectStats.addBug(bugInstance);
         }
-        return bugSet.add(bugInstance);
+        return added;
     }
 
     private void invalidateHashes() {

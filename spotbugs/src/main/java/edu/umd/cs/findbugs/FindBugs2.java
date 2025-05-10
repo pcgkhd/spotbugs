@@ -291,7 +291,7 @@ public class FindBugs2 implements IFindBugsEngine, AutoCloseable {
 
                 if (executionPlan.isActive(NoteSuppressedWarnings.class)) {
                     SuppressionMatcher m = AnalysisContext.currentAnalysisContext().getSuppressionMatcher();
-                    bugReporter = new FilterBugReporter(bugReporter, m, false);
+                    bugReporter = new SuppressionMatcherBugReporter(bugReporter, m);
                 }
 
                 if (appClassList.isEmpty()) {
@@ -1189,7 +1189,7 @@ public class FindBugs2 implements IFindBugsEngine, AutoCloseable {
      */
     private void logRecoverableException(ClassDescriptor classDescriptor, Detector2 detector, Throwable e) {
         bugReporter.logError(
-                "Exception analyzing " + classDescriptor.toDottedClassName() + " using detector "
+                "Exception analyzing " + classDescriptor.getDottedClassName() + " using detector "
                         + detector.getDetectorClassName(), e);
     }
 

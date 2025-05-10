@@ -73,7 +73,11 @@ public class Filter {
          */
         public static final long MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000L;
 
-        Pattern classPattern, bugPattern, callsPattern;
+        Pattern classPattern;
+
+        Pattern bugPattern;
+
+        Pattern callsPattern;
 
         public boolean notSpecified = false;
 
@@ -471,25 +475,19 @@ public class Filter {
                 return false;
             }
 
-            if (hashChangedSpecified) {
-                if (bug.isInstanceHashConsistent() == hashChanged) {
-                    return false;
-                }
+            if (hashChangedSpecified && bug.isInstanceHashConsistent() == hashChanged) {
+                return false;
             }
             if (applySuppressionSpecified && applySuppression && suppressionFilter.match(bug)) {
                 return false;
             }
             SourceLineAnnotation primarySourceLineAnnotation = bug.getPrimarySourceLineAnnotation();
 
-            if (knownSourceSpecified) {
-                if (primarySourceLineAnnotation.isUnknown() == knownSource) {
-                    return false;
-                }
+            if (knownSourceSpecified && primarySourceLineAnnotation.isUnknown() == knownSource) {
+                return false;
             }
-            if (withSourceSpecified) {
-                if (sourceSearcher.findSource(primarySourceLineAnnotation) != withSource) {
-                    return false;
-                }
+            if (withSourceSpecified && sourceSearcher.findSource(primarySourceLineAnnotation) != withSource) {
+                return false;
             }
 
             if (sloppyUniqueSpecified) {

@@ -5,7 +5,7 @@ import edu.umd.cs.findbugs.BugReporter;
 import edu.umd.cs.findbugs.OpcodeStack;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.ba.AnalysisContext;
-import edu.umd.cs.findbugs.ba.SignatureParser;
+import edu.umd.cs.findbugs.ba.generic.GenericSignatureParser;
 import edu.umd.cs.findbugs.ba.XMethod;
 import edu.umd.cs.findbugs.bcel.OpcodeStackDetector;
 import edu.umd.cs.findbugs.internalAnnotations.DottedClassName;
@@ -134,7 +134,7 @@ public class ThrowingExceptions extends OpcodeStackDetector {
                         .filter(m -> method.getName().equals(m.getName()) && signatureMatches(method, m))
                         .findAny();
                 if (superMethod.isPresent()) {
-                    throwsEx = Arrays.asList(superMethod.get().getExceptionTable().getExceptionNames()).contains(exception);
+                    throwsEx = doesThrowException(superMethod.get(), exception);
                 } else {
                     throwsEx = parentThrows(ancestor, method, exception);
                 }
@@ -145,7 +145,7 @@ public class ThrowingExceptions extends OpcodeStackDetector {
                         .filter(m -> method.getName().equals(m.getName()) && signatureMatches(method, m))
                         .findAny();
                 if (superMethod.isPresent()) {
-                    throwsEx |= Arrays.asList(superMethod.get().getExceptionTable().getExceptionNames()).contains(exception);
+                    throwsEx |= doesThrowException(superMethod.get(), exception);
                 } else {
                     throwsEx |= parentThrows(intf, method, exception);
                 }
@@ -156,6 +156,11 @@ public class ThrowingExceptions extends OpcodeStackDetector {
         return throwsEx;
     }
 
+    private boolean doesThrowException(Method m, @DottedClassName String exception) {
+        ExceptionTable exceptionTable = m.getExceptionTable();
+        return exceptionTable != null && Arrays.asList(exceptionTable.getExceptionNames()).contains(exception);
+    }
+
     private boolean signatureMatches(Method child, Method parent) {
         String genSig = parent.getGenericSignature();
         if (genSig == null) {
@@ -164,8 +169,8 @@ public class ThrowingExceptions extends OpcodeStackDetector {
 
         String sig = child.getSignature();
 
-        SignatureParser genSP = new SignatureParser(genSig);
-        SignatureParser sp = new SignatureParser(sig);
+        GenericSignatureParser genSP = new GenericSignatureParser(genSig);
+        GenericSignatureParser sp = new GenericSignatureParser(sig);
 
         if (genSP.getNumParameters() != sp.getNumParameters()) {
             return false;
