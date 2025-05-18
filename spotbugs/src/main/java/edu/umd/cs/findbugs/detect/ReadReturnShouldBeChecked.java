@@ -195,7 +195,7 @@ public class ReadReturnShouldBeChecked extends OpcodeStackDetector implements St
         }
 
         //The return value of the read() is copied into a variable
-        if (seen == Const.DUP) {
+        if (seen == Const.DUP && itemToBeCompared != null) {
             itemToBeCompared = null;
         }
 
