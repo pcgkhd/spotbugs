@@ -31,7 +31,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import org.apache.bcel.Const;
 import org.apache.bcel.classfile.Code;
@@ -461,7 +461,7 @@ public class ClassContext {
     }
 
     @Nonnull
-    static public Set<Integer> getLoopExitBranches(Method method, MethodGen methodGen) {
+    public static Set<Integer> getLoopExitBranches(Method method, MethodGen methodGen) {
 
         XMethod xmethod = XFactory.createXMethod(methodGen);
         if (cachedLoopExits().containsKey(xmethod)) {

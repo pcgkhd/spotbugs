@@ -57,6 +57,11 @@
     <!-- Details subelement needed -->
   </BugCategory>
 
+  <BugCategory category="SECURITY">
+    <Description>Sécurité</Description>
+    <Abbreviation>S</Abbreviation>
+    <Details>Une utilisation d’entrées non fiables d’une manière qui pourrait créer une vulnérabilité de sécurité exploitable à distance.</Details>
+  </BugCategory>
 
  <Detector class="edu.umd.cs.findbugs.detect.CheckImmutableAnnotation">
   <Details>
@@ -940,6 +945,14 @@ Un accesseur spécial est généré dans ce cas par la compilateur pour écrire 
 ]]>
   </Details>
  </Detector>
+  <Detector class="edu.umd.cs.findbugs.detect.UnsafeDetector">
+    <Details>
+<![CDATA[
+<p>Ce détecteur cherche les appels aux classes Unsafe.</p>
+]]>
+    </Details>
+  </Detector>
+
  <BugPattern type="SW_SWING_METHODS_INVOKED_IN_SWING_THREAD">
   <ShortDescription>Certaines méthodes Swing ne doivent être invoquées qu'à partir du thread Swing</ShortDescription>
   <LongDescription>L'appel de la méthode Swing {1} doit être effectué à partir du thread Swing</LongDescription>
@@ -956,7 +969,7 @@ Un accesseur spécial est généré dans ce cas par la compilateur pour écrire 
   <LongDescription>Il y a apparemment une boucle infinie dans {1}</LongDescription>
   <Details>
 <![CDATA[
-<p>Cette boucle ne semble pas avoir un moyen de se terminer (autrement que, peut être, en déclenchant une exception).</p>
+<p>Cette boucle ne semble pas avoir un moyen de se terminer (autrement que, peut être, en déclenchant une exception). Les boucles sans condition comme <code>while (true) {...}</code> sont considerées comme intentionnelles et ne sont pas reportées comme des bugs</p>
 ]]>
   </Details>
  </BugPattern>
@@ -1688,7 +1701,7 @@ synchronized() {}
   <LongDescription>{1} devrait être sorti de l'interface et mis en package protected</LongDescription>
   <Details>
 <![CDATA[
-<p>Un champ final static défini dans une interface référence un objet modifiable tel qu'un tableau ou une table de hachage. Cet objet pourrait être modifié par accident ou par du code sournois d'un autre paquetage. Pour résoudre cela et éviter cette vulnérabilité, le champ doit être intégré dans une classe et sa visibilité modifiée en package protected.</p>
+<p>Un champ static final défini dans une interface référence un objet modifiable tel qu'un tableau ou une table de hachage. Cet objet pourrait être modifié par accident ou par du code sournois d'un autre paquetage. Pour résoudre cela et éviter cette vulnérabilité, le champ doit être intégré dans une classe et sa visibilité modifiée en package protected.</p>
 ]]>
   </Details>
  </BugPattern>
@@ -1734,7 +1747,7 @@ Cependant l'initialisation du champ comporte plusieurs écriture, ce qui requier
   <LongDescription>{1} une Hashtable modifiable</LongDescription>
   <Details>
 <![CDATA[
-<p>Le champ est une référence final static à une <code>Hashtable</code> et peut-être modifié par accident ou par du code malveillant d'un autre paquetage. Ce code peut librement modifier le contenu de la <code>Hashtable</code>.</p>
+<p>Le champ est une référence static final à une <code>Hashtable</code> et peut-être modifié par accident ou par du code malveillant d'un autre paquetage. Ce code peut librement modifier le contenu de la <code>Hashtable</code>.</p>
 ]]>
   </Details>
  </BugPattern>
@@ -1743,7 +1756,7 @@ Cependant l'initialisation du champ comporte plusieurs écriture, ce qui requier
   <LongDescription>{1} est un tableau modifiable</LongDescription>
   <Details>
 <![CDATA[
-<p>Le champ est une référence final static à un tableau et peut-être modifié par accident ou par du code malveillant d'un autre paquetage. Ce code peut librement modifier le contenu du tableau.</p>
+<p>Le champ est une référence static final à un tableau et peut-être modifié par accident ou par du code malveillant d'un autre paquetage. Ce code peut librement modifier le contenu du tableau.</p>
 ]]>
   </Details>
  </BugPattern>
@@ -3235,6 +3248,15 @@ double value2 =  x / (double) y;
 ]]>
   </Details>
  </BugPattern>
+ <BugPattern type="DMI_MISLEADING_SUBSTRING">
+  <ShortDescription>Appel de substring(0) qui retourne la même valeur que toString()</ShortDescription>
+  <LongDescription>{1} appelle substring(0), ce qui peut être clarifié en appelant toString()</LongDescription>
+  <Details>
+<![CDATA[
+<p>Ce code appelle <code>substring(0)</code> sur un StringBuffer ou StringBuilder, ce qui renvoit la même valeur que toString().</p>
+]]>
+  </Details>
+ </BugPattern>
  <BugPattern type="DMI_CALLING_NEXT_FROM_HASNEXT">
   <ShortDescription>Méthode hasNext() appelant next()</ShortDescription>
   <LongDescription>{1} appelle {3}</LongDescription>
@@ -3361,6 +3383,24 @@ Ce string utilisé dans un format contient le caractère newline (\n). Il est g�
 ]]>
     </Details>
  </BugPattern>
+  <BugPattern type="UNS_UNSAFE_CALL">
+    <ShortDescription>Appel à Unsafe.</ShortDescription>
+    <LongDescription>N'utilisez pas {0}. Comme l'indique le nom de cette classe, l'utilisation de ses méthodes peut causer des failles de sécurité.
+    </LongDescription>
+    <Details>
+      <![CDATA[
+      <p>N'utilisez ni sun.misc.Unsafe, ni
+      jdk.internal.misc.Unsafe. Comme le nom de ces classes l'indique,
+      l'utilisation de leurs méthodes peut causer des failles de
+      sécurité. Elles ont été remplacées par des API officielles
+      telles que l'API VarHandle (JDK 9) et l'API Foreign Function &
+      Memory (JDK 22). Voir la
+      <a href="https://openjdk.org/jeps/471">JEP 471</a> pour plus de
+      détails sur les alternatives plus sûres, y compris des exemples
+      de code avant et après.</p>
+      ]]>
+    </Details>
+  </BugPattern>
  <BugCode abbrev="IL">Boucle infinie</BugCode>
  <BugCode abbrev="VO">Utilisation de volatile</BugCode>
  <BugCode abbrev="UI">Héritage non sûr</BugCode>
@@ -3471,4 +3511,5 @@ Ce string utilisé dans un format contient le caractère newline (\n). Il est g�
  <BugCode abbrev="QBA">Assignation booléenne douteuse</BugCode>
  <BugCode abbrev="VR">Problème de compatibilité entre les versions</BugCode>
  <BugCode abbrev="DP">Utiliser doPrivileged</BugCode>
+ <BugCode abbrev="UNS">Appel à Unsafe</BugCode>
 </MessageCollection>

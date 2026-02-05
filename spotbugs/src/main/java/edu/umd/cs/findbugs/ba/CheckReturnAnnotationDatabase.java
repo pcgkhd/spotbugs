@@ -27,7 +27,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import javax.annotation.CheckForNull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import javax.annotation.meta.When;
 
 import org.apache.bcel.Const;
@@ -288,7 +288,7 @@ public class CheckReturnAnnotationDatabase extends AnnotationDatabase<CheckRetur
             return null;
         }
         XMethod m = (XMethod) o;
-        if (m.getName().startsWith("access$")) {
+        if (m.isAccessMethod()) {
             return null;
         } else if (Const.CONSTRUCTOR_NAME.equals(m.getName())) {
             CheckReturnValueAnnotation a = getResolvedAnnotationOnConstructor(m);

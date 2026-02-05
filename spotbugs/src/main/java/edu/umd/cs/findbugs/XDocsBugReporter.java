@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Iterator;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 import org.dom4j.Document;
 import org.dom4j.DocumentHelper;
@@ -129,8 +129,9 @@ public class XDocsBugReporter extends TextUIBugReporter {
     private void writeXML(Writer out, Project project) throws IOException {
         Document doc = endDocument(project);
 
-        XMLWriter writer = new XMLWriter(out, OutputFormat.createPrettyPrint());
-        writer.write(doc);
+        try (XMLWriter writer = new XMLWriter(out, OutputFormat.createPrettyPrint())) {
+            writer.write(doc);
+        }
     }
 
     private Document endDocument(Project project) {
